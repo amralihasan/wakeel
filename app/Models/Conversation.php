@@ -16,6 +16,7 @@ class Conversation extends Model
     use BelongsToCompany, HasFactory;
 
     protected $fillable = [
+        'company_id',
         'customer_phone',
         'lead_id',
         'mode',

@@ -13,9 +13,11 @@ class CompanyFactory extends Factory
 {
     public function definition(): array
     {
+        $company = fake()->unique()->company();
+
         return [
-            'name' => fake()->company(),
-            'slug' => Str::slug(fake()->company()),
+            'name' => $company,
+            'slug' => Str::slug($company),
             'email' => fake()->companyEmail(),
             'phone' => fake()->phoneNumber(),
             'plan' => 'starter',

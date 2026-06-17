@@ -18,6 +18,7 @@ class Message extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'company_id',
         'conversation_id',
         'direction',
         'sender',

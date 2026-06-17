@@ -17,6 +17,7 @@ class Lead extends Model
     use BelongsToCompany, HasFactory;
 
     protected $fillable = [
+        'company_id',
         'customer_phone',
         'name',
         'budget_max',
