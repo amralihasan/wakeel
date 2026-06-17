@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'dialog360' => [
+        'base_url' => env('DIALOG360_BASE_URL', 'https://waba-v2.360dialog.io'),
+        'api_key' => env('DIALOG360_API_KEY'),
+        'channel_pool' => explode(',', (string) env('DIALOG360_CHANNEL_POOL', '')),
+    ],
+
 ];
