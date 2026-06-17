@@ -11,8 +11,10 @@
     "nightwatch": false,
     "sail": false,
     "skills": [
+        "cashier-stripe-development",
         "fortify-development",
         "laravel-best-practices",
+        "configuring-horizon",
         "fluxui-development",
         "livewire-development",
         "pest-testing",
