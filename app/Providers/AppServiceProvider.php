@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Services\Agent\SystemPromptBuilder;
 use App\Services\CurrentCompany;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
@@ -17,6 +18,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(CurrentCompany::class);
+        $this->app->singleton(SystemPromptBuilder::class);
     }
 
     /**
