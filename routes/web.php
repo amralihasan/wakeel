@@ -17,6 +17,8 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
+
+    Route::livewire('dashboard/conversations', 'pages::dashboard.conversations')->name('dashboard.conversations');
 });
 
 require __DIR__.'/settings.php';
