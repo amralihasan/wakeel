@@ -26,6 +26,7 @@ class Lead extends Model
         'interested_unit_id',
         'score',
         'tier',
+        'scored_signals',
         'status',
         'source',
     ];
@@ -34,6 +35,7 @@ class Lead extends Model
     {
         return [
             'tier' => LeadTier::class,
+            'scored_signals' => 'array',
         ];
     }
 

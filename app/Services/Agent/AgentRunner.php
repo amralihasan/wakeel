@@ -15,6 +15,7 @@ use App\Models\Company;
 use App\Models\Conversation;
 use App\Models\Lead;
 use App\Models\Message;
+use App\Services\Leads\LeadScoringService;
 use App\Services\WhatsApp\ConversationSession;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -83,6 +84,8 @@ class AgentRunner
                 ->asText();
 
             $assistantText = $response->text;
+
+            $this->applyToolSignals($lead, $response);
         } catch (\Throwable $e) {
             Log::error('AgentRunner Prism error', [
                 'company_id' => $company->id,
@@ -131,5 +134,28 @@ class AgentRunner
         $messages[] = new UserMessage($incomingText);
 
         return $messages;
+    }
+
+    protected function applyToolSignals(Lead $lead, $response): void
+    {
+        $signals = [];
+
+        foreach ($response->toolCalls as $toolCall) {
+            if ($toolCall->name === 'send_unit_media') {
+                $signals['asked_media'] = true;
+            }
+
+            if ($toolCall->name === 'calculate_installment') {
+                $signals['asked_installment'] = true;
+            }
+        }
+
+        if (! empty($lead->budget_max)) {
+            $signals['stated_budget'] = true;
+        }
+
+        if (! empty($signals)) {
+            app(LeadScoringService::class)->applySignals($lead, $signals);
+        }
     }
 }

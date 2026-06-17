@@ -2,22 +2,13 @@
 
 namespace App\Agent\Tools;
 
-use App\Enums\LeadTier;
 use App\Models\Lead;
+use App\Services\Leads\LeadScoringService;
 use Prism\Prism\Schema\BooleanSchema;
 use Prism\Prism\Tool;
 
 class QualifyLeadTool extends Tool
 {
-    protected static array $scoreMap = [
-        'stated_budget' => 30,
-        'asked_price' => 25,
-        'booked_visit' => 30,
-        'asked_installment' => 15,
-        'asked_media' => 10,
-        'general_inquiry' => 5,
-    ];
-
     public function __construct(
         protected int $companyId,
         protected int $leadId,
@@ -39,29 +30,19 @@ class QualifyLeadTool extends Tool
 
     public function __invoke(array $signals): string
     {
-        $score = 0;
+        $lead = Lead::where('id', $this->leadId)
+            ->where('company_id', $this->companyId)
+            ->first();
 
-        foreach (self::$scoreMap as $signal => $points) {
-            if (! empty($signals[$signal])) {
-                $score += $points;
-            }
+        if (! $lead) {
+            return json_encode(['score' => 0, 'tier' => 'cold']);
         }
 
-        $score = min($score, 100);
-
-        $tier = match (true) {
-            $score >= 70 => LeadTier::Hot,
-            $score >= 40 => LeadTier::Warm,
-            default => LeadTier::Cold,
-        };
-
-        Lead::where('id', $this->leadId)
-            ->where('company_id', $this->companyId)
-            ->update(['score' => $score, 'tier' => $tier]);
+        $lead = app(LeadScoringService::class)->applySignals($lead, $signals);
 
         return json_encode([
-            'score' => $score,
-            'tier' => $tier->value,
+            'score' => $lead->score,
+            'tier' => $lead->tier->value,
         ]);
     }
 }
