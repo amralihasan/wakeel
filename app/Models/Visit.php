@@ -15,6 +15,7 @@ class Visit extends Model
     use BelongsToCompany, HasFactory;
 
     protected $fillable = [
+        'company_id',
         'lead_id',
         'unit_id',
         'scheduled_at',

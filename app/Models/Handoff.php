@@ -15,6 +15,7 @@ class Handoff extends Model
     use BelongsToCompany, HasFactory;
 
     protected $fillable = [
+        'company_id',
         'conversation_id',
         'lead_id',
         'reason',
