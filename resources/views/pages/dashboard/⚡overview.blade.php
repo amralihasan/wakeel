@@ -209,8 +209,47 @@ new #[Title('لوحة التحكم')] #[Layout('layouts.app')] class extends Com
     {{-- Top Heading --}}
     <div class="flex items-center justify-between">
         <h1 class="text-2xl font-bold tracking-tight">نظرة عامة على المنصة</h1>
-        <div class="text-sm text-neutral-500">
-            تاريخ اليوم: {{ now()->translatedFormat('l, d F Y') }}
+        <div class="flex items-center gap-4">
+            <div class="text-sm text-neutral-500">
+                تاريخ اليوم: {{ now()->translatedFormat('l, d F Y') }}
+            </div>
+        </div>
+    </div>
+
+    {{-- Subscription Usage Card --}}
+    @php
+        $company = Auth::user()->company;
+        $plan = config("plans.{$company->plan}");
+        $convLimit = $plan['conversations_limit'] ?? 0;
+        $convUsed = $company->conversations_count;
+        $convPct = $convLimit > 0 ? min(100, round(($convUsed / $convLimit) * 100)) : 0;
+    @endphp
+    <div class="rounded-xl border border-neutral-200 bg-white p-4 shadow-xs dark:border-neutral-700 dark:bg-zinc-900 {{ $company->hasReachedConversationsLimit() ? 'border-red-300 dark:border-red-700' : '' }}">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-3">
+                <span class="text-sm font-semibold">{{ $plan['name'] ?? 'Starter' }}</span>
+                @if ($company->billing_cycle_start)
+                    <span class="text-xs text-neutral-500">
+                        {{ $company->billing_cycle_start->format('d M') }} - {{ $company->billing_cycle_end?->format('d M Y') }}
+                    </span>
+                @endif
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="text-xs text-neutral-500">
+                    المحادثات: <strong>{{ $convUsed }}</strong> / {{ $convLimit === -1 ? 'غير محدود' : $convLimit }}
+                </span>
+                @if ($convLimit > 0)
+                    <div class="h-2 w-24 rounded-full bg-neutral-100 dark:bg-neutral-800">
+                        <div class="h-2 rounded-full {{ $convPct >= 80 ? 'bg-red-500' : 'bg-indigo-500' }}" style="width: {{ $convPct }}%"></div>
+                    </div>
+                @endif
+                @if ($company->hasReachedConversationsLimit())
+                    <flux:badge variant="danger" size="sm">تم استهلاك الحد الأقصى</flux:badge>
+                @elseif ($convPct >= 80)
+                    <flux:badge variant="warning" size="sm">اقتربت من الحد الأقصى</flux:badge>
+                @endif
+                <flux:button size="xs" variant="ghost" :href="route('billing.index')" wire:navigate>إدارة الاشتراك</flux:button>
+            </div>
         </div>
     </div>
 

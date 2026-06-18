@@ -22,12 +22,14 @@ class Conversation extends Model
         'mode',
         'assigned_rep_id',
         'last_message_at',
+        'last_billable_cycle_start',
     ];
 
     protected function casts(): array
     {
         return [
             'mode' => ConversationMode::class,
+            'last_billable_cycle_start' => 'datetime',
         ];
     }
 

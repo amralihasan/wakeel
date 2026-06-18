@@ -39,6 +39,14 @@
                     <flux:sidebar.item icon="chart-bar" :href="route('dashboard.analytics')" :current="request()->routeIs('dashboard.analytics')" wire:navigate>
                         {{ __('التحليلات') }}
                     </flux:sidebar.item>
+
+                    <flux:sidebar.item icon="user-group" :href="route('dashboard.team')" :current="request()->routeIs('dashboard.team')" wire:navigate>
+                        {{ __('فريق العمل') }}
+                    </flux:sidebar.item>
+
+                    <flux:sidebar.item icon="credit-card" :href="route('billing.index')" :current="request()->routeIs('billing.index')" wire:navigate>
+                        {{ __('الاشتراك والفوترة') }}
+                    </flux:sidebar.item>
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 

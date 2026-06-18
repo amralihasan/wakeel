@@ -74,6 +74,9 @@ class AgentRunner
             new EscalateToAgentTool($company->id, $lead->id, $customerPhone),
         ];
 
+        $inputTokens = null;
+        $outputTokens = null;
+
         try {
             $response = Prism::text()
                 ->using(config('prism.default_provider'), config('prism.default_model'))
@@ -84,6 +87,8 @@ class AgentRunner
                 ->asText();
 
             $assistantText = $response->text;
+            $inputTokens = $response->usage->inputTokens ?? null;
+            $outputTokens = $response->usage->outputTokens ?? null;
 
             $this->applyToolSignals($lead, $response);
         } catch (\Throwable $e) {
@@ -110,6 +115,8 @@ class AgentRunner
             'direction' => MessageDirection::Outbound,
             'sender' => MessageSender::Bot,
             'body' => $assistantText,
+            'input_tokens' => $inputTokens,
+            'output_tokens' => $outputTokens,
         ]);
 
         $session->pushTurn(['role' => 'assistant', 'content' => $assistantText]);
@@ -221,6 +228,9 @@ class AgentRunner
 
         $messages[] = new UserMessage($followUpInstruction);
 
+        $inputTokens = null;
+        $outputTokens = null;
+
         try {
             $response = Prism::text()
                 ->using(config('prism.default_provider'), config('prism.default_model'))
@@ -230,6 +240,8 @@ class AgentRunner
                 ->asText();
 
             $assistantText = $response->text;
+            $inputTokens = $response->usage->inputTokens ?? null;
+            $outputTokens = $response->usage->outputTokens ?? null;
         } catch (\Throwable $e) {
             Log::error('AgentRunner Prism follow-up error', [
                 'company_id' => $company->id,
@@ -254,6 +266,8 @@ class AgentRunner
             'direction' => MessageDirection::Outbound,
             'sender' => MessageSender::Bot,
             'body' => $assistantText,
+            'input_tokens' => $inputTokens,
+            'output_tokens' => $outputTokens,
         ]);
 
         $session->pushTurn(['role' => 'assistant', 'content' => $assistantText]);

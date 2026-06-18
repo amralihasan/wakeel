@@ -27,6 +27,8 @@ class Message extends Model
         'media_type',
         'wa_message_id',
         'created_at',
+        'input_tokens',
+        'output_tokens',
     ];
 
     protected function casts(): array
@@ -35,6 +37,8 @@ class Message extends Model
             'direction' => MessageDirection::class,
             'sender' => MessageSender::class,
             'created_at' => 'datetime',
+            'input_tokens' => 'integer',
+            'output_tokens' => 'integer',
         ];
     }
 
@@ -49,6 +53,17 @@ class Message extends Model
             $message->conversation()->update([
                 'last_message_at' => $message->created_at ?? now(),
             ]);
+
+            if ($message->direction === MessageDirection::Outbound) {
+                $conversation = $message->conversation;
+                $company = $conversation->company;
+                $company->ensureCurrentBillingCycle();
+
+                if ($conversation->last_billable_cycle_start?->toDateTimeString() !== $company->billing_cycle_start?->toDateTimeString()) {
+                    $company->increment('conversations_count');
+                    $conversation->update(['last_billable_cycle_start' => $company->billing_cycle_start]);
+                }
+            }
         });
     }
 }

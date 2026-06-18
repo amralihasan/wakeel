@@ -4,6 +4,7 @@ namespace App\Services\WhatsApp;
 
 use App\Exceptions\WhatsAppException;
 use App\Models\Company;
+use App\Models\WhatsAppChannel;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -128,20 +129,23 @@ class Dialog360Client implements WhatsAppClientContract
 
     public function assignNumberFromPool(Company $company): void
     {
-        $pool = config('services.dialog360.channel_pool', []);
+        $channel = WhatsAppChannel::where('status', 'available')->first();
 
-        if (empty($pool)) {
+        if (! $channel) {
             throw new WhatsAppException('No channel IDs available in the pool.');
         }
 
-        $channelId = $pool[array_rand($pool)];
-
         $company->update([
-            'dialog360_channel_id' => $channelId,
-            'whatsapp_number' => $channelId,
+            'dialog360_channel_id' => $channel->channel_id,
+            'whatsapp_number' => $channel->number,
         ]);
 
-        $this->registerWebhook($channelId, $company);
+        $channel->update([
+            'status' => 'assigned',
+            'assigned_company_id' => $company->id,
+        ]);
+
+        $this->registerWebhook($channel->channel_id, $company);
     }
 
     protected function registerWebhook(string $channelId, Company $company): void

@@ -92,6 +92,12 @@ new #[Title('الوحدات العقارية')] class extends Component {
     {
         Gate::authorize('manageUnits', Auth::user()->company);
 
+        if (! $this->unitId && Auth::user()->company->hasReachedUnitsLimit()) {
+            $this->addError('title', 'لقد وصلت للحد الأقصى للوحدات المسموح بها في خطتك.');
+
+            return;
+        }
+
         $this->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
@@ -241,6 +247,13 @@ new #[Title('الوحدات العقارية')] class extends Component {
     public function openCreateForm(): void
     {
         Gate::authorize('manageUnits', Auth::user()->company);
+
+        if (Auth::user()->company->hasReachedUnitsLimit()) {
+            Flux::toast(variant: 'danger', text: 'لقد وصلت للحد الأقصى للوحدات المسموح بها في خطتك الحالية.');
+
+            return;
+        }
+
         $this->resetForm();
         $this->showForm = true;
     }

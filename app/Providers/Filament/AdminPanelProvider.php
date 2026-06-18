@@ -2,10 +2,12 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Widgets\AdminOverviewWidget;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationItem;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -38,6 +40,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
+                AdminOverviewWidget::class,
                 AccountWidget::class,
                 FilamentInfoWidget::class,
             ])
@@ -54,6 +57,18 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+            ])
+            ->navigationItems([
+                NavigationItem::make('Horizon')
+                    ->url(fn (): string => url('/horizon'), shouldOpenInNewTab: true)
+                    ->icon('heroicon-o-cpu-chip')
+                    ->group('System Monitoring')
+                    ->sort(1),
+                NavigationItem::make('Reverb')
+                    ->url(fn (): string => url('/reverb'), shouldOpenInNewTab: true)
+                    ->icon('heroicon-o-server')
+                    ->group('System Monitoring')
+                    ->sort(2),
             ]);
     }
 }

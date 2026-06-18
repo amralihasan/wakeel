@@ -8,6 +8,7 @@ use App\Models\Conversation;
 use App\Models\Lead;
 use App\Models\Message;
 use App\Models\User;
+use App\Models\WhatsAppChannel;
 use App\Services\Agent\SystemPromptBuilder;
 use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
@@ -47,8 +48,8 @@ it('completes onboarding wizard successfully', function () {
     $user = User::factory()->owner()->create(['company_id' => $company->id]);
     actingAs($user);
 
-    // Mock services config pool for step 3
-    config(['services.dialog360.channel_pool' => ['ch-test-123']]);
+    // Seed whatsapp channels pool for step 3
+    WhatsAppChannel::create(['number' => 'ch-test-123', 'channel_id' => 'ch-test-123', 'status' => 'available']);
 
     Livewire::test('pages::dashboard.onboarding')
         ->set('companyName', 'الشركة الجديدة')

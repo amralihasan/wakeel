@@ -4,6 +4,7 @@ use App\Exceptions\WhatsAppException;
 use App\Jobs\SendWhatsAppMedia;
 use App\Jobs\SendWhatsAppText;
 use App\Models\Company;
+use App\Models\WhatsAppChannel;
 use App\Services\WhatsApp\WhatsAppClientContract;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
@@ -105,6 +106,9 @@ it('assigns a number from the pool to a company', function () {
         'waba-v2.360dialog.io/configs/webhook' => Http::response('OK', 200),
     ]);
 
+    WhatsAppChannel::create(['number' => 'channel-1', 'channel_id' => 'channel-1', 'status' => 'available']);
+    WhatsAppChannel::create(['number' => 'channel-2', 'channel_id' => 'channel-2', 'status' => 'available']);
+
     $company = Company::factory()->create();
 
     $client = app(WhatsAppClientContract::class);
@@ -154,7 +158,7 @@ it('SendWhatsAppText job calls the client on handle', function () {
 });
 
 it('throws WhatsAppException when the channel pool is empty', function () {
-    config()->set('services.dialog360.channel_pool', []);
+    WhatsAppChannel::query()->delete();
 
     $company = Company::factory()->create();
     $client = app(WhatsAppClientContract::class);

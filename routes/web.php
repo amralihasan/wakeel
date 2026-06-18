@@ -27,6 +27,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::livewire('dashboard/leads/{lead}', 'pages::dashboard.lead-detail')->name('dashboard.leads.show');
         Route::livewire('dashboard/visits', 'pages::dashboard.visits')->name('dashboard.visits');
         Route::livewire('dashboard/analytics', 'pages::dashboard.analytics')->name('dashboard.analytics');
+
+        Route::livewire('dashboard/billing', 'pages::dashboard.billing')->name('billing.index');
+        Route::livewire('dashboard/team', 'pages::dashboard.team')->name('dashboard.team');
     });
 });
 
