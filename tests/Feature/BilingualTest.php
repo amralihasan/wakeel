@@ -73,22 +73,22 @@ it('has exact key parity between all Arabic and English translation files', func
 
 it('resolves fallback locale for guest without session', function () {
     config(['app.fallback_locale' => 'en']);
-    $this->get(route('home'));
+    $this->get(route('marketing.home'));
     expect(app()->getLocale())->toBe('en');
 
     config(['app.fallback_locale' => 'ar']);
-    $this->get(route('home'));
+    $this->get(route('marketing.home'));
     expect(app()->getLocale())->toBe('ar');
 });
 
 it('resolves locale based on session preference for guests', function () {
     config(['app.fallback_locale' => 'ar']);
 
-    $this->withSession(['locale' => 'en'])->get(route('home'));
+    $this->withSession(['locale' => 'en'])->get(route('marketing.home'));
     expect(app()->getLocale())->toBe('en')
         ->and(view()->shared('dir'))->toBe('ltr');
 
-    $this->withSession(['locale' => 'ar'])->get(route('home'));
+    $this->withSession(['locale' => 'ar'])->get(route('marketing.home'));
     expect(app()->getLocale())->toBe('ar')
         ->and(view()->shared('dir'))->toBe('rtl');
 });
@@ -100,7 +100,7 @@ it('resolves locale based on authenticated user preferences', function () {
         'locale' => 'en',
     ]);
 
-    $this->actingAs($user)->get(route('home'));
+    $this->actingAs($user)->get(route('marketing.home'));
     expect(app()->getLocale())->toBe('en')
         ->and(view()->shared('dir'))->toBe('ltr');
 });
@@ -112,7 +112,7 @@ it('resolves locale based on company default locale if user preference is null',
         'locale' => null,
     ]);
 
-    $this->actingAs($user)->get(route('home'));
+    $this->actingAs($user)->get(route('marketing.home'));
     expect(app()->getLocale())->toBe('en')
         ->and(view()->shared('dir'))->toBe('ltr');
 });

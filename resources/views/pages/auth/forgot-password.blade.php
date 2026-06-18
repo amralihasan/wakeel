@@ -18,7 +18,7 @@
                 placeholder="email@example.com"
             />
 
-            <flux:button variant="primary" type="submit" class="w-full" data-test="email-password-reset-link-button">
+            <flux:button type="submit" class="w-full bg-wa-green hover:bg-wa-green/90 text-zinc-900 font-bold py-2 rounded-xl transition-all shadow-md shadow-wa-green/20 border-0 cursor-pointer" data-test="email-password-reset-link-button">
                 {{ __('Email password reset link') }}
             </flux:button>
         </form>
