@@ -19,6 +19,21 @@ class CompanyResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-building-office-2';
 
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.companies');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.companies');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('admin.company');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return CompanyForm::configure($schema);

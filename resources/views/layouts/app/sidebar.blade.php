@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark" @if(app()->getLocale() === 'ar') dir="rtl" @endif>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark" dir="{{ $dir ?? (app()->getLocale() === 'ar' ? 'rtl' : 'ltr') }}">
     <head>
         @include('partials.head')
     </head>
@@ -13,40 +13,52 @@
             <flux:sidebar.nav>
                 <flux:sidebar.group :heading="__('Platform')" class="grid">
                     <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                        {{ __('Dashboard') }}
+                        {{ __('dashboard.title') }}
                     </flux:sidebar.item>
 
                     <flux:sidebar.item icon="chat-bubble-left-right" :href="route('dashboard.conversations')" :current="request()->routeIs('dashboard.conversations')" wire:navigate>
-                        {{ __('المحادثات') }}
+                        {{ __('dashboard.conversations') }}
                     </flux:sidebar.item>
 
                     <flux:sidebar.item icon="users" :href="route('dashboard.leads')" :current="request()->routeIs('dashboard.leads*')" wire:navigate>
-                        {{ __('العملاء المهتمين') }}
+                        {{ __('dashboard.leads') }}
                     </flux:sidebar.item>
 
                     <flux:sidebar.item icon="calendar-days" :href="route('dashboard.visits')" :current="request()->routeIs('dashboard.visits')" wire:navigate>
-                        {{ __('الزيارات') }}
+                        {{ __('dashboard.visits') }}
                     </flux:sidebar.item>
 
                     <flux:sidebar.item icon="building-office-2" :href="route('units.index')" :current="request()->routeIs('units.*')" wire:navigate>
-                        {{ __('الوحدات العقارية') }}
+                        {{ __('dashboard.units') }}
                     </flux:sidebar.item>
 
                     <flux:sidebar.item icon="cog-6-tooth" :href="route('bot-settings.index')" :current="request()->routeIs('bot-settings.*')" wire:navigate>
-                        {{ __('إعدادات البوت') }}
+                        {{ __('dashboard.bot_settings') }}
                     </flux:sidebar.item>
 
                     <flux:sidebar.item icon="chart-bar" :href="route('dashboard.analytics')" :current="request()->routeIs('dashboard.analytics')" wire:navigate>
-                        {{ __('التحليلات') }}
+                        {{ __('dashboard.analytics') }}
                     </flux:sidebar.item>
 
                     <flux:sidebar.item icon="user-group" :href="route('dashboard.team')" :current="request()->routeIs('dashboard.team')" wire:navigate>
-                        {{ __('فريق العمل') }}
+                        {{ __('dashboard.team') }}
                     </flux:sidebar.item>
 
                     <flux:sidebar.item icon="credit-card" :href="route('billing.index')" :current="request()->routeIs('billing.index')" wire:navigate>
-                        {{ __('الاشتراك والفوترة') }}
+                        {{ __('dashboard.billing') }}
                     </flux:sidebar.item>
+                </flux:sidebar.group>
+
+                <flux:sidebar.group :heading="__('Language')" class="grid">
+                    @if(app()->getLocale() === 'ar')
+                        <flux:sidebar.item href="{{ route('locale.switch', 'en') }}" wire:navigate>
+                            English
+                        </flux:sidebar.item>
+                    @else
+                        <flux:sidebar.item href="{{ route('locale.switch', 'ar') }}" wire:navigate>
+                            العربية
+                        </flux:sidebar.item>
+                    @endif
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 

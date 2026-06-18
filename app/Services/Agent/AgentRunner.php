@@ -90,6 +90,8 @@ class AgentRunner
             $inputTokens = $response->usage->inputTokens ?? null;
             $outputTokens = $response->usage->outputTokens ?? null;
 
+            $this->logTokenAnomalies($company, $customerPhone, $inputTokens, $outputTokens);
+
             $this->applyToolSignals($lead, $response);
         } catch (\Throwable $e) {
             Log::error('AgentRunner Prism error', [
@@ -98,7 +100,8 @@ class AgentRunner
                 'error' => $e->getMessage(),
             ]);
 
-            $assistantText = 'معلش حصل خطأ بسيط، ممكن تعيد رسالتك؟';
+            $locale = $lead->locale ?? $company->default_locale ?? 'ar';
+            $assistantText = __('bot.fallback_error', [], $locale);
         }
 
         if ($customerPhone !== '+200000000000') {
@@ -168,6 +171,18 @@ class AgentRunner
         }
     }
 
+    protected function logTokenAnomalies(Company $company, string $customerPhone, ?int $inputTokens, ?int $outputTokens): void
+    {
+        if (($inputTokens !== null && $inputTokens > 15000) || ($outputTokens !== null && $outputTokens > 4000)) {
+            Log::warning('AgentRunner LLM token anomaly detected', [
+                'company_id' => $company->id,
+                'customer_phone' => substr($customerPhone, 0, 4).'***'.substr($customerPhone, -3),
+                'input_tokens' => $inputTokens,
+                'output_tokens' => $outputTokens,
+            ]);
+        }
+    }
+
     public function generateFollowUp(Company $company, string $customerPhone): string
     {
         $lock = Cache::lock("agent_runner:{$company->id}:{$customerPhone}", 30);
@@ -224,7 +239,8 @@ class AgentRunner
                 : new UserMessage($content);
         }
 
-        $followUpInstruction = 'العميل لم يقم بالرد منذ 23 ساعة بعد آخر رسالة منا. اكتب رسالة متابعة قصيرة، ودودة ومخصصة بناءً على اهتماماته وسياق المحادثة لإعادة تنشيط الحوار. لا تستخدم أي أدوات ولا تقم بإنشاء روابط أو تخمين تفاصيل غير موجودة.';
+        $locale = $lead->locale ?? $company->default_locale ?? 'ar';
+        $followUpInstruction = __('bot.followup_instruction', [], $locale);
 
         $messages[] = new UserMessage($followUpInstruction);
 
@@ -242,6 +258,8 @@ class AgentRunner
             $assistantText = $response->text;
             $inputTokens = $response->usage->inputTokens ?? null;
             $outputTokens = $response->usage->outputTokens ?? null;
+
+            $this->logTokenAnomalies($company, $customerPhone, $inputTokens, $outputTokens);
         } catch (\Throwable $e) {
             Log::error('AgentRunner Prism follow-up error', [
                 'company_id' => $company->id,
@@ -249,7 +267,8 @@ class AgentRunner
                 'error' => $e->getMessage(),
             ]);
 
-            $assistantText = 'مرحباً، حابين نتطمن لو لسه مهتم بعروضنا العقارية؟ لو عندك أي استفسار أنا هنا للمساعدة.';
+            $locale = $lead->locale ?? $company->default_locale ?? 'ar';
+            $assistantText = __('bot.default_followup_message', [], $locale);
         }
 
         if ($customerPhone !== '+200000000000') {

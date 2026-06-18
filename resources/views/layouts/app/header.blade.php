@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark" @if(app()->getLocale() === 'ar') dir="rtl" @endif>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark" dir="{{ $dir ?? (app()->getLocale() === 'ar' ? 'rtl' : 'ltr') }}">
     <head>
         @include('partials.head')
     </head>
@@ -11,31 +11,41 @@
 
             <flux:navbar class="-mb-px max-lg:hidden">
                 <flux:navbar.item icon="layout-grid" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                    {{ __('Dashboard') }}
+                    {{ __('dashboard.title') }}
                 </flux:navbar.item>
                 <flux:navbar.item icon="chat-bubble-left-right" :href="route('dashboard.conversations')" :current="request()->routeIs('dashboard.conversations')" wire:navigate>
-                    {{ __('المحادثات') }}
+                    {{ __('dashboard.conversations') }}
                 </flux:navbar.item>
                 <flux:navbar.item icon="users" :href="route('dashboard.leads')" :current="request()->routeIs('dashboard.leads*')" wire:navigate>
-                    {{ __('العملاء المهتمين') }}
+                    {{ __('dashboard.leads') }}
                 </flux:navbar.item>
                 <flux:navbar.item icon="calendar-days" :href="route('dashboard.visits')" :current="request()->routeIs('dashboard.visits')" wire:navigate>
-                    {{ __('الزيارات') }}
+                    {{ __('dashboard.visits') }}
                 </flux:navbar.item>
                 <flux:navbar.item icon="building-office-2" :href="route('units.index')" :current="request()->routeIs('units.*')" wire:navigate>
-                    {{ __('الوحدات العقارية') }}
+                    {{ __('dashboard.units') }}
                 </flux:navbar.item>
                 <flux:navbar.item icon="cog-6-tooth" :href="route('bot-settings.index')" :current="request()->routeIs('bot-settings.*')" wire:navigate>
-                    {{ __('إعدادات البوت') }}
+                    {{ __('dashboard.bot_settings') }}
                 </flux:navbar.item>
                 <flux:navbar.item icon="chart-bar" :href="route('dashboard.analytics')" :current="request()->routeIs('dashboard.analytics')" wire:navigate>
-                    {{ __('التحليلات') }}
+                    {{ __('dashboard.analytics') }}
                 </flux:navbar.item>
             </flux:navbar>
 
             <flux:spacer />
 
             <flux:navbar class="me-1.5 space-x-0.5 rtl:space-x-reverse py-0!">
+                @if(app()->getLocale() === 'ar')
+                    <flux:navbar.item href="{{ route('locale.switch', 'en') }}" wire:navigate class="!h-10 text-sm font-semibold">
+                        English
+                    </flux:navbar.item>
+                @else
+                    <flux:navbar.item href="{{ route('locale.switch', 'ar') }}" wire:navigate class="!h-10 text-sm font-semibold">
+                        العربية
+                    </flux:navbar.item>
+                @endif
+
                 <flux:tooltip :content="__('Search')" position="bottom">
                     <flux:navbar.item class="!h-10 [&>div>svg]:size-5" icon="magnifying-glass" href="#" :label="__('Search')" />
                 </flux:tooltip>

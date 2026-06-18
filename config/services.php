@@ -40,6 +40,7 @@ return [
         'api_key' => env('DIALOG360_API_KEY'),
         'channel_pool' => explode(',', (string) env('DIALOG360_CHANNEL_POOL', '')),
         'verify_token' => env('WHATSAPP_WEBHOOK_VERIFY_TOKEN'),
+        'app_secret' => env('WHATSAPP_APP_SECRET'),
     ],
 
 ];

@@ -16,6 +16,7 @@ class Company extends Model
 
     protected $fillable = [
         'name',
+        'default_locale',
         'slug',
         'email',
         'phone',

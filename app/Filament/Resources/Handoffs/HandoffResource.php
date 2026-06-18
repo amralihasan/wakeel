@@ -19,9 +19,25 @@ class HandoffResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-exclamation-triangle';
 
-    protected static ?string $navigationLabel = 'Escalations / Handoffs';
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.handoffs');
+    }
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Platform Management';
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.handoffs');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('admin.handoff');
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.platform_management');
+    }
 
     public static function canCreate(): bool
     {

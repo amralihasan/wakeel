@@ -12,7 +12,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Title('التقارير والتحليلات')] #[Layout('layouts.app')] class extends Component {
+new #[Title('analytics.title')] #[Layout('layouts.app')] class extends Component {
     public int $companyId;
 
     public function mount(): void
@@ -80,25 +80,25 @@ new #[Title('التقارير والتحليلات')] #[Layout('layouts.app')] c
 
         return [
             [
-                'name' => 'إعلانات فيسبوك (Facebook Ads)',
+                'name' => __('analytics.facebook'),
                 'count' => $fb,
                 'percentage' => round(($fb / $total) * 100),
                 'color' => 'bg-blue-600',
             ],
             [
-                'name' => 'الموقع الإلكتروني (Website)',
+                'name' => __('analytics.website'),
                 'count' => $web,
                 'percentage' => round(($web / $total) * 100),
                 'color' => 'bg-green-600',
             ],
             [
-                'name' => 'مسح رمز الاستجابة (QR Codes)',
+                'name' => __('analytics.qr_code'),
                 'count' => $qr,
                 'percentage' => round(($qr / $total) * 100),
                 'color' => 'bg-indigo-600',
             ],
             [
-                'name' => 'مصادر أخرى (Other)',
+                'name' => __('analytics.others'),
                 'count' => $other,
                 'percentage' => round(($other / $total) * 100),
                 'color' => 'bg-neutral-500',
@@ -137,36 +137,36 @@ new #[Title('التقارير والتحليلات')] #[Layout('layouts.app')] c
     }
 }; ?>
 
-<div class="space-y-6" dir="rtl">
+<div class="space-y-6" dir="{{ $dir ?? (app()->getLocale() === 'ar' ? 'rtl' : 'ltr') }}">
     {{-- Header --}}
     <div>
-        <h1 class="text-2xl font-bold tracking-tight">تقارير وتحليلات الأداء</h1>
-        <p class="text-sm text-neutral-500 mt-1">تتبع مؤشرات أداء المحادثات، ومصادر العملاء الجدد، وتدفق عمليات المعاينة، وإنتاجية مناديب المبيعات.</p>
+        <h1 class="text-2xl font-bold tracking-tight">{{ __('analytics.header_title') }}</h1>
+        <p class="text-sm text-neutral-500 mt-1">{{ __('analytics.subtitle') }}</p>
     </div>
 
     {{-- Monthly Totals Metrics Grid --}}
     <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {{-- conversations --}}
         <div class="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs dark:border-neutral-700 dark:bg-zinc-900">
-            <span class="block text-xs font-medium text-neutral-500">إجمالي الرسائل (هذا الشهر)</span>
+            <span class="block text-xs font-medium text-neutral-500">{{ __('analytics.total_messages_month') }}</span>
             <span class="block text-3xl font-semibold tracking-tight mt-2">{{ $this->monthlyTotals['conversations'] }}</span>
         </div>
 
         {{-- qualified leads --}}
         <div class="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs dark:border-neutral-700 dark:bg-zinc-900">
-            <span class="block text-xs font-medium text-neutral-500">العملاء المؤهلين (سجل ≥ 70)</span>
+            <span class="block text-xs font-medium text-neutral-500">{{ __('analytics.qualified_leads_desc') }}</span>
             <span class="block text-3xl font-semibold tracking-tight mt-2 text-rose-600">{{ $this->monthlyTotals['qualified_leads'] }}</span>
         </div>
 
         {{-- viewings --}}
         <div class="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs dark:border-neutral-700 dark:bg-zinc-900">
-            <span class="block text-xs font-medium text-neutral-500">مواعيد المعاينات المحجوزة</span>
+            <span class="block text-xs font-medium text-neutral-500">{{ __('analytics.booked_visits') }}</span>
             <span class="block text-3xl font-semibold tracking-tight mt-2">{{ $this->monthlyTotals['viewings'] }}</span>
         </div>
 
         {{-- conversion rate --}}
         <div class="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs dark:border-neutral-700 dark:bg-zinc-900">
-            <span class="block text-xs font-medium text-neutral-500">معدل تحويل المعاينات (Conversion %)</span>
+            <span class="block text-xs font-medium text-neutral-500">{{ __('analytics.visit_conversion_pct') }}</span>
             <span class="block text-3xl font-semibold tracking-tight mt-2 text-green-600">{{ $this->monthlyTotals['conversion_rate'] }}%</span>
         </div>
     </div>
@@ -175,7 +175,7 @@ new #[Title('التقارير والتحليلات')] #[Layout('layouts.app')] c
     <div class="grid gap-6 lg:grid-cols-2">
         {{-- Sources Breakdown --}}
         <div class="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-zinc-900">
-            <h3 class="text-sm font-semibold mb-6">مصادر جذب العملاء المهتمين</h3>
+            <h3 class="text-sm font-semibold mb-6">{{ __('analytics.lead_sources') }}</h3>
             
             <div class="space-y-6">
                 @foreach ($this->leadSources as $source)
@@ -183,7 +183,7 @@ new #[Title('التقارير والتحليلات')] #[Layout('layouts.app')] c
                         <div class="flex items-center justify-between text-xs">
                             <span class="font-medium text-neutral-800 dark:text-neutral-200">{{ $source['name'] }}</span>
                             <span class="font-semibold text-neutral-600 dark:text-neutral-400">
-                                {{ $source['count'] }} عميل ({{ $source['percentage'] }}%)
+                                {{ __('analytics.lead_count_pct', ['count' => $source['count'], 'percentage' => $source['percentage']]) }}
                             </span>
                         </div>
                         <div class="h-3 w-full bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
@@ -196,14 +196,14 @@ new #[Title('التقارير والتحليلات')] #[Layout('layouts.app')] c
 
         {{-- Reps Performance Leaderboard --}}
         <div class="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-zinc-900">
-            <h3 class="text-sm font-semibold mb-6">أداء المناديب والوكلاء البشريين</h3>
+            <h3 class="text-sm font-semibold mb-6">{{ __('analytics.performance_leaderboard') }}</h3>
             
-            <table class="w-full text-right border-collapse">
+            <table class="w-full {{ app()->getLocale() === 'ar' ? 'text-right' : 'text-left' }} border-collapse">
                 <thead>
                     <tr class="border-b border-neutral-150 dark:border-neutral-800 text-xs text-neutral-500">
-                        <th class="pb-3 text-right">المندوب</th>
-                        <th class="pb-3 text-center">المحادثات المستلمة</th>
-                        <th class="pb-3 text-center">المعاينات المكتملة</th>
+                        <th class="pb-3 {{ app()->getLocale() === 'ar' ? 'text-right' : 'text-left' }}">{{ __('analytics.rep_label') }}</th>
+                        <th class="pb-3 text-center">{{ __('analytics.claimed_conversations') }}</th>
+                        <th class="pb-3 text-center">{{ __('analytics.completed_visits') }}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-neutral-100 dark:divide-neutral-800 text-xs">
@@ -211,7 +211,7 @@ new #[Title('التقارير والتحليلات')] #[Layout('layouts.app')] c
                         <tr class="hover:bg-neutral-50/50 dark:hover:bg-neutral-800/30 transition">
                             <td class="py-3">
                                 <div class="font-semibold text-neutral-800 dark:text-neutral-200">{{ $rep['name'] }}</div>
-                                <div class="text-[10px] text-neutral-500 mt-0.5">{{ $rep['role'] === 'owner' ? 'مالك الشركة' : 'مندوب مبيعات' }}</div>
+                                <div class="text-[10px] text-neutral-500 mt-0.5">{{ $rep['role'] === 'owner' ? __('analytics.owner') : __('analytics.sales_agent') }}</div>
                             </td>
                             <td class="py-3 text-center font-semibold text-neutral-700 dark:text-neutral-300">
                                 {{ $rep['handoffs'] }}
@@ -222,7 +222,7 @@ new #[Title('التقارير والتحليلات')] #[Layout('layouts.app')] c
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="3" class="text-center py-10 text-neutral-400">لا يوجد مناديب مسجلين.</td>
+                            <td colspan="3" class="text-center py-10 text-neutral-400">{{ __('analytics.no_reps') }}</td>
                         </tr>
                     @endforelse
                 </tbody>

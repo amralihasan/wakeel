@@ -3,12 +3,15 @@
 use App\Http\Controllers\WhatsAppWebhookController;
 use App\Livewire\Auth\Register;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
 
 Route::get('webhooks/whatsapp', [WhatsAppWebhookController::class, 'verify'])->name('webhooks.whatsapp');
 Route::post('webhooks/whatsapp', [WhatsAppWebhookController::class, 'handle'])
+    ->middleware('throttle:120,1')
     ->withoutMiddleware([VerifyCsrfToken::class]);
 
 Route::middleware('guest')->group(function () {
@@ -34,3 +37,40 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 require __DIR__.'/settings.php';
+
+Route::get('health', function () {
+    $db = true;
+    $redis = true;
+
+    try {
+        DB::connection()->getPdo();
+    } catch (Throwable) {
+        $db = false;
+    }
+
+    try {
+        Redis::connection()->ping();
+    } catch (Throwable) {
+        $redis = false;
+    }
+
+    $healthy = $db && $redis;
+
+    return response()->json([
+        'status' => $healthy ? 'healthy' : 'degraded',
+        'database' => $db ? 'connected' : 'unreachable',
+        'redis' => $redis ? 'connected' : 'unreachable',
+        'timestamp' => now()->toIso8601String(),
+    ], $healthy ? 200 : 503);
+})->name('health');
+
+Route::get('lang/{locale}', function (string $locale) {
+    if (in_array($locale, ['ar', 'en'])) {
+        session(['locale' => $locale]);
+        if (auth()->check()) {
+            auth()->user()->update(['locale' => $locale]);
+        }
+    }
+
+    return back();
+})->name('locale.switch');

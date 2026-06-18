@@ -9,6 +9,8 @@ use App\Models\Lead;
 use App\Models\Message;
 use App\Services\WhatsApp\ConversationSession;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 
 class WhatsAppWebhookController extends Controller
 {
@@ -27,6 +29,14 @@ class WhatsAppWebhookController extends Controller
 
     public function handle(Request $request)
     {
+        if ($this->shouldVerifySignature()) {
+            $verified = $this->verifySignature($request);
+
+            if (! $verified) {
+                return response()->json(['status' => 'invalid_signature'], 401);
+            }
+        }
+
         $payload = $request->all();
 
         $channelId = $payload['entry'][0]['changes'][0]['value']['metadata']['phone_number_id'] ?? null;
@@ -37,6 +47,14 @@ class WhatsAppWebhookController extends Controller
             return response()->json(['status' => 'ignored'], 200);
         }
 
+        if (RateLimiter::tooManyAttempts('webhook-phone:'.$from, 10)) {
+            Log::warning('Webhook rate-limited per phone', ['phone' => $this->maskPhone($from)]);
+
+            return response()->json(['status' => 'rate_limited'], 429);
+        }
+
+        RateLimiter::hit('webhook-phone:'.$from, 60);
+
         if (Message::where('wa_message_id', $waMessageId)->exists()) {
             return response()->json(['status' => 'duplicate'], 200);
         }
@@ -44,16 +62,36 @@ class WhatsAppWebhookController extends Controller
         $company = Company::where('dialog360_channel_id', $channelId)->first();
 
         if (! $company) {
+            Log::info('Webhook from unknown channel', ['channel_id' => $channelId, 'phone' => $this->maskPhone($from)]);
+
             return response()->json(['status' => 'unknown_company'], 200);
         }
 
         $messageData = $payload['entry'][0]['changes'][0]['value']['messages'][0];
         $body = $this->extractBody($messageData);
 
+        $detectedLocale = null;
+        if ($body) {
+            if (preg_match('/[\x{0600}-\x{06FF}]/u', $body)) {
+                $detectedLocale = 'ar';
+            } else {
+                $detectedLocale = 'en';
+            }
+        }
+
         $lead = Lead::firstOrCreate(
             ['company_id' => $company->id, 'customer_phone' => $from],
-            ['name' => null, 'status' => 'new', 'source' => 'whatsapp'],
+            [
+                'name' => null,
+                'status' => 'new',
+                'source' => 'whatsapp',
+                'locale' => $detectedLocale ?? $company->default_locale ?? 'ar',
+            ],
         );
+
+        if ($detectedLocale && $lead->locale !== $detectedLocale) {
+            $lead->update(['locale' => $detectedLocale]);
+        }
 
         $conversation = Conversation::firstOrCreate(
             ['company_id' => $company->id, 'customer_phone' => $from],
@@ -84,6 +122,38 @@ class WhatsAppWebhookController extends Controller
         ProcessInboundMessageJob::dispatch($company->id, $from, $body);
 
         return response()->json(['status' => 'ok'], 200);
+    }
+
+    protected function shouldVerifySignature(): bool
+    {
+        return filled(config('services.dialog360.app_secret'));
+    }
+
+    protected function verifySignature(Request $request): bool
+    {
+        $signature = $request->header('X-Hub-Signature-256');
+
+        if (! $signature) {
+            return false;
+        }
+
+        $expected = 'sha256='.hash_hmac('sha256', $request->getContent(), config('services.dialog360.app_secret'));
+
+        return hash_equals($expected, $signature);
+    }
+
+    protected function maskPhone(string $phone): string
+    {
+        $length = strlen($phone);
+
+        if ($length <= 6) {
+            return str_repeat('*', $length);
+        }
+
+        $visible = 4;
+        $masked = $length - $visible - 3;
+
+        return substr($phone, 0, $visible).str_repeat('*', $masked).substr($phone, -3);
     }
 
     protected function extractBody(array $messageData): ?string

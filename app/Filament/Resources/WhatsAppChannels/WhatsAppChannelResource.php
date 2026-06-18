@@ -19,9 +19,25 @@ class WhatsAppChannelResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-phone';
 
-    protected static ?string $navigationLabel = 'WhatsApp Channels';
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.whatsapp_channels');
+    }
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Platform Management';
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.whatsapp_channels');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('admin.whatsapp_channel');
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.platform_management');
+    }
 
     public static function form(Schema $schema): Schema
     {

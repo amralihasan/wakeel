@@ -166,3 +166,38 @@ it('throws WhatsAppException when the channel pool is empty', function () {
     expect(fn () => $client->assignNumberFromPool($company))
         ->toThrow(WhatsAppException::class, 'No channel IDs available');
 });
+
+it('SendWhatsAppText job fails fast on 4xx client exception', function () {
+    $exception = new WhatsAppException('Client error', 400);
+
+    $mock = Mockery::mock(WhatsAppClientContract::class);
+    $mock->shouldReceive('sendText')
+        ->once()
+        ->andThrow($exception);
+
+    swap(WhatsAppClientContract::class, $mock);
+
+    $jobMock = Mockery::mock(SendWhatsAppText::class, ['ch1', '+201234567890', 'Hello'])->makePartial();
+    $jobMock->shouldReceive('fail')
+        ->once()
+        ->with($exception);
+
+    $jobMock->handle($mock);
+});
+
+it('SendWhatsAppText job rethrows 5xx server exception without failing fast', function () {
+    $exception = new WhatsAppException('Server error', 500);
+
+    $mock = Mockery::mock(WhatsAppClientContract::class);
+    $mock->shouldReceive('sendText')
+        ->once()
+        ->andThrow($exception);
+
+    swap(WhatsAppClientContract::class, $mock);
+
+    $jobMock = Mockery::mock(SendWhatsAppText::class, ['ch1', '+201234567890', 'Hello'])->makePartial();
+    $jobMock->shouldNotReceive('fail');
+
+    expect(fn () => $jobMock->handle($mock))
+        ->toThrow(WhatsAppException::class);
+});

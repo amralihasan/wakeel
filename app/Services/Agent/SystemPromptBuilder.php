@@ -11,19 +11,37 @@ class SystemPromptBuilder
     public function build(Company $company, ?Lead $lead = null): string
     {
         $settings = $company->bot_settings ?? [];
+        $locale = $lead?->locale ?? $company->default_locale ?? 'ar';
 
         return implode("\n\n", [
-            $this->personaSection($company, $settings),
-            $this->toolPolicySection(),
-            $this->escalationSection($settings),
-            $this->contextSection($company, $lead, $settings),
+            $this->personaSection($company, $settings, $locale),
+            $this->toolPolicySection($locale),
+            $this->escalationSection($settings, $locale),
+            $this->contextSection($company, $lead, $settings, $locale),
         ]);
     }
 
-    protected function personaSection(Company $company, array $settings): string
+    protected function personaSection(Company $company, array $settings, string $locale): string
     {
         $botName = $settings['bot_name'] ?? 'نور';
         $tone = $settings['tone'] ?? 'friendly_egyptian';
+
+        if ($locale === 'en') {
+            $toneInstructions = match ($tone) {
+                'formal' => 'Communicate in a professional, formal, and polite English style.',
+                'gulf' => 'Communicate in a welcoming, friendly, and courteous English style suitable for real estate clients in the Gulf.',
+                default => 'Communicate in a friendly, conversational, and warm English style.',
+            };
+
+            return <<<PROMPT
+Your name is "$botName" and you are an intelligent real estate assistant working for "{$company->name}".
+Your primary task is to assist leads who are interested in real estate units, understand their requirements (budget, number of rooms, location, payment plan), recommend suitable units to them, and guide serious leads to book a viewing visit.
+
+Style Guidelines:
+$toneInstructions
+Be friendly, and avoid excessively long responses that look like blocks of text. Keep your responses suitable for WhatsApp chats.
+PROMPT;
+        }
 
         $toneInstructions = match ($tone) {
             'formal' => 'تحدث باللغة العربية الفصحى المبسطة، وبأسلوب مهني وراقي جداً.',
@@ -41,8 +59,17 @@ $toneInstructions
 PROMPT;
     }
 
-    protected function toolPolicySection(): string
+    protected function toolPolicySection(string $locale): string
     {
+        if ($locale === 'en') {
+            return <<<'PROMPT'
+Tool & Data Usage Guidelines:
+1. Do not invent or guess real estate details (such as prices, areas, locations, or availability). You must use the `search_properties` tool to search for available units.
+2. If the lead asks for details that you do not have, use the search tool immediately. If you do not find matching units, politely inform them and ask if they would like to adjust their search criteria (such as budget or location).
+3. You can only send brochures or images of units using the `send_unit_media` tool. Do not claim to send files that the tool has not sent.
+PROMPT;
+        }
+
         return <<<'PROMPT'
 تعليمات استخدام الأدوات والبيانات:
 1. لا تخترع أو تخمن تفاصيل العقارات (مثل الأسعار، المساحات، المواقع أو التوفر). يجب عليك استخدام أداة البحث `search_properties` لمعرفة الوحدات المتاحة.
@@ -51,10 +78,20 @@ PROMPT;
 PROMPT;
     }
 
-    protected function escalationSection(array $settings): string
+    protected function escalationSection(array $settings, string $locale): string
     {
         $threshold = $settings['escalation_rules']['score_threshold'] ?? 70;
         $unproductiveLimit = $settings['escalation_rules']['unproductive_messages'] ?? 5;
+
+        if ($locale === 'en') {
+            return <<<PROMPT
+Human Agent Escalation Guidelines (Handoff):
+You must call the `escalate_to_agent` tool to transfer the lead to a human agent in the following cases:
+1. If the lead explicitly asks to speak with a human or a sales consultant.
+2. If you have qualified the lead and their Lead Score reaches $threshold or more.
+3. If questions are repeated without clear progress after $unproductiveLimit unproductive messages.
+PROMPT;
+        }
 
         return <<<PROMPT
 تعليمات التحويل لوكيل مبيعات بشري (الهاندأوف):
@@ -65,9 +102,39 @@ PROMPT;
 PROMPT;
     }
 
-    protected function contextSection(Company $company, ?Lead $lead, array $settings): string
+    protected function contextSection(Company $company, ?Lead $lead, array $settings, string $locale): string
     {
         $now = Carbon::now('Africa/Cairo');
+
+        if ($locale === 'en') {
+            $dateStr = $now->locale('en')->isoFormat('dddd, D MMMM YYYY');
+            $timeStr = $now->format('H:i');
+
+            $leadContext = 'Not available currently';
+            if ($lead) {
+                $leadContext = 'Name: '.($lead->name ?? 'Unknown')."\n";
+                $leadContext .= 'Phone: '.$lead->customer_phone."\n";
+                $leadContext .= 'Max Budget: '.($lead->budget_max ? number_format($lead->budget_max).' EGP' : 'Not specified yet')."\n";
+                $leadContext .= 'Interested Unit: '.($lead->interestedUnit?->title ?? 'Not specified yet')."\n";
+                $leadContext .= 'Current Lead Score: '.($lead->score ?? 'Not scored yet');
+            }
+
+            $workingHours = $settings['working_hours'] ?? '24_7';
+            $workingHoursContext = $workingHours === '24_7'
+                ? 'The company works 24 hours a day, 7 days a week.'
+                : 'The company works 7 days a week from 9 AM to 9 PM Cairo time. If the current time is outside working hours, politely inform the customer that sales consultants will contact them as soon as working hours begin.';
+
+            return <<<PROMPT
+Current Operational Context:
+- Today's Date: $dateStr
+- Current Time: $timeStr (Cairo Time).
+- Working Hours Policy: $workingHoursContext
+
+Current Lead Context:
+$leadContext
+PROMPT;
+        }
+
         $dateStr = $now->locale('ar')->isoFormat('dddd، D MMMM YYYY');
         $timeStr = $now->format('H:i');
 

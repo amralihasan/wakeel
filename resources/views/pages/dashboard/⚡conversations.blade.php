@@ -17,7 +17,7 @@ use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Title('Conversations')] class extends Component {
+new #[Title('conversations.title')] class extends Component {
     public ?int $activeConversationId = null;
 
     public string $resolutionNotes = '';
@@ -70,7 +70,7 @@ new #[Title('Conversations')] class extends Component {
         $user = Auth::user();
 
         if (! $user->isOwner() && ! $user->isSalesRep()) {
-            Flux::toast(variant: 'error', text: 'غير مصرح لك باستلام المحادثات.');
+            Flux::toast(variant: 'error', text: __('conversations.unauthorized'));
 
             return;
         }
@@ -156,7 +156,8 @@ new #[Title('Conversations')] class extends Component {
             'assigned_rep_id' => null,
         ]);
 
-        $closingMessage = 'أقدر أساعدك في حاجة تانية؟';
+        $leadLocale = $conversation->lead?->locale ?? $company->default_locale ?? 'ar';
+        $closingMessage = trans('conversations.closing_greeting', [], $leadLocale);
 
         SendWhatsAppText::dispatch(
             $company->dialog360_channel_id,
@@ -193,13 +194,13 @@ new #[Title('Conversations')] class extends Component {
     }
 }; ?>
 
-<section class="flex h-full w-full flex-1 gap-4">
+<section class="flex h-full w-full flex-1 gap-4" dir="{{ $dir ?? (app()->getLocale() === 'ar' ? 'rtl' : 'ltr') }}">
     {{-- Side Panel --}}
     <div class="w-80 shrink-0 space-y-4">
         {{-- Handoff Queue --}}
-        <div class="rounded-xl border border-neutral-200 dark:border-neutral-700">
+        <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-zinc-900">
             <div class="border-b border-neutral-200 px-4 py-3 dark:border-neutral-700">
-                <h2 class="text-sm font-semibold">طلبات التحويل</h2>
+                <h2 class="text-sm font-semibold">{{ __('conversations.waiting_escalations') }}</h2>
             </div>
             <div class="max-h-64 space-y-1 overflow-y-auto p-2">
                 @forelse ($this->handoffs as $handoff)
@@ -208,39 +209,39 @@ new #[Title('Conversations')] class extends Component {
                         <div class="min-w-0 flex-1">
                             <p class="truncate text-xs text-neutral-600 dark:text-neutral-400">{{ $handoff->ai_summary ?? $handoff->reason }}</p>
                             <span class="text-[10px] {{ $waitMinutes < 2 ? 'text-green-600 dark:text-green-400' : ($waitMinutes <= 5 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400') }}">
-                                {{ $waitMinutes < 1 ? 'الآن' : "منذ {$waitMinutes} دقائق" }}
+                                {{ $waitMinutes < 1 ? __('conversations.now') : __('conversations.minutes_ago', ['minutes' => $waitMinutes]) }}
                             </span>
                         </div>
-                        <flux:button size="xs" wire:click="claimHandoff({{ $handoff->id }})">استلام</flux:button>
+                        <flux:button size="xs" wire:click="claimHandoff({{ $handoff->id }})">{{ __('conversations.claim') }}</flux:button>
                     </div>
                 @empty
-                    <p class="py-4 text-center text-xs text-neutral-500">لا توجد طلبات تحويل</p>
+                    <p class="py-4 text-center text-xs text-neutral-500">{{ __('conversations.no_escalations') }}</p>
                 @endforelse
             </div>
         </div>
 
         {{-- Active Conversations List --}}
-        <div class="rounded-xl border border-neutral-200 dark:border-neutral-700">
+        <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-zinc-900">
             <div class="border-b border-neutral-200 px-4 py-3 dark:border-neutral-700">
-                <h2 class="text-sm font-semibold">المحادثات النشطة</h2>
+                <h2 class="text-sm font-semibold">{{ __('conversations.active_conversations') }}</h2>
             </div>
             <div class="max-h-64 space-y-1 overflow-y-auto p-2">
                 @forelse ($this->activeConversations as $conversation)
-                    <button wire:click="selectConversation({{ $conversation->id }})" class="w-full rounded-lg p-2 text-right text-xs transition hover:bg-neutral-100 dark:hover:bg-neutral-800 {{ $activeConversationId === $conversation->id ? 'bg-neutral-100 dark:bg-neutral-800' : '' }}">
+                    <button wire:click="selectConversation({{ $conversation->id }})" class="w-full rounded-lg p-2 text-start text-xs transition hover:bg-neutral-100 dark:hover:bg-neutral-800 {{ $activeConversationId === $conversation->id ? 'bg-neutral-100 dark:bg-neutral-800' : '' }}">
                         <span class="font-medium">{{ $conversation->customer_phone }}</span>
                         @if ($conversation->assigned_rep_id)
-                            <span class="block text-[10px] text-neutral-500">مع {{ $conversation->assignedRep?->name ?? 'مندوب' }}</span>
+                            <span class="block text-[10px] text-neutral-500">{{ __('conversations.with_agent', ['name' => $conversation->assignedRep?->name ?? '']) }}</span>
                         @endif
                     </button>
                 @empty
-                    <p class="py-4 text-center text-xs text-neutral-500">لا توجد محادثات نشطة</p>
+                    <p class="py-4 text-center text-xs text-neutral-500">{{ __('conversations.no_conversations') }}</p>
                 @endforelse
             </div>
         </div>
     </div>
 
     {{-- Main Chat Area --}}
-    <div class="flex flex-1 flex-col rounded-xl border border-neutral-200 dark:border-neutral-700">
+    <div class="flex flex-1 flex-col rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-zinc-900">
         @if ($activeConversationId)
             {{-- Message Thread --}}
             <div class="flex-1 space-y-3 overflow-y-auto p-4">
@@ -253,25 +254,25 @@ new #[Title('Conversations')] class extends Component {
                     </div>
                 @empty
                     <div class="flex h-full items-center justify-center">
-                        <p class="text-sm text-neutral-500">لا توجد رسائل بعد</p>
+                        <p class="text-sm text-neutral-500">{{ __('conversations.no_messages') }}</p>
                     </div>
                 @endforelse
             </div>
 
             {{-- Composer & Resolve --}}
-            <div class="border-t border-neutral-200 p-4 dark:border-neutral-700">
+            <div class="border-t border-neutral-200 p-4 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 rounded-b-xl">
                 <form wire:submit="sendMessage" class="flex gap-2">
-                    <flux:textarea wire:model="replyText" placeholder="اكتب رسالتك..." class="flex-1" rows="2" />
-                    <flux:button type="submit" variant="primary" class="self-start">إرسال</flux:button>
+                    <flux:textarea wire:model="replyText" placeholder="{{ __('conversations.type_message') }}" class="flex-1" rows="2" />
+                    <flux:button type="submit" variant="primary" class="self-start">{{ __('conversations.send') }}</flux:button>
                 </form>
                 <div class="mt-2 flex items-center gap-2">
-                    <flux:input wire:model="resolutionNotes" placeholder="ملاحظات الحل (اختياري)" class="flex-1" />
-                    <flux:button wire:click="resolveConversation" class="shrink-0 cursor-pointer rounded-lg bg-red-600 px-4 py-2 text-xs font-medium text-white transition hover:bg-red-700">إنهاء المحادثة</flux:button>
+                    <flux:input wire:model="resolutionNotes" placeholder="{{ __('conversations.resolution_notes_placeholder') }}" class="flex-1" />
+                    <flux:button wire:click="resolveConversation" class="shrink-0 cursor-pointer rounded-lg bg-red-600 px-4 py-2 text-xs font-medium text-white transition hover:bg-red-700">{{ __('conversations.resolve') }}</flux:button>
                 </div>
             </div>
         @else
             <div class="flex h-full items-center justify-center">
-                <p class="text-sm text-neutral-500">اختر محادثة من القائمة</p>
+                <p class="text-sm text-neutral-500">{{ __('conversations.select_conversation') }}</p>
             </div>
         @endif
     </div>

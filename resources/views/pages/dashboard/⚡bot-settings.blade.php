@@ -14,7 +14,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Title('إعدادات البوت')] #[Layout('layouts.app')] class extends Component {
+new #[Title('bot.assistant_settings_title')] #[Layout('layouts.app')] class extends Component {
     public string $botName = '';
 
     public string $tone = '';
@@ -94,7 +94,7 @@ new #[Title('إعدادات البوت')] #[Layout('layouts.app')] class extends
             ]
         ]);
 
-        Flux::toast(variant: 'success', text: 'تم حفظ إعدادات البوت بنجاح');
+        Flux::toast(variant: 'success', text: __('bot.success_saved'));
     }
 
     public function sendTestMessage(): void
@@ -136,111 +136,111 @@ new #[Title('إعدادات البوت')] #[Layout('layouts.app')] class extends
     }
 }; ?>
 
-    <div class="flex h-full w-full flex-1 gap-6 p-4" dir="rtl">
-        {{-- Settings Form --}}
-        <div class="flex-1 space-y-6">
-            <h1 class="text-xl font-bold">إعدادات المساعد الذكي</h1>
+<div class="flex h-full w-full flex-1 gap-6 p-4" dir="{{ $dir ?? (app()->getLocale() === 'ar' ? 'rtl' : 'ltr') }}">
+    {{-- Settings Form --}}
+    <div class="flex-1 space-y-6">
+        <h1 class="text-xl font-bold">{{ __('bot.assistant_settings_title') }}</h1>
 
-            <form wire:submit="saveSettings" class="space-y-6 max-w-xl">
+        <form wire:submit="saveSettings" class="space-y-6 max-w-xl">
+            <div class="grid grid-cols-2 gap-4">
+                <flux:field class="col-span-2">
+                    <flux:label>{{ __('bot.assistant_name_label') }}</flux:label>
+                    <flux:input wire:model="botName" required />
+                    <flux:error name="botName" />
+                </flux:field>
+
+                <flux:field>
+                    <flux:label>{{ __('bot.preferred_dialect_label') }}</flux:label>
+                    <flux:select wire:model="tone" required>
+                        <option value="friendly_egyptian">{{ __('bot.friendly_egyptian') }}</option>
+                        <option value="formal">{{ __('bot.formal_arabic') }}</option>
+                        <option value="gulf">{{ __('bot.gulf_arabic') }}</option>
+                    </flux:select>
+                    <flux:error name="tone" />
+                </flux:field>
+
+                <flux:field>
+                    <flux:label>{{ __('bot.working_hours_label') }}</flux:label>
+                    <flux:select wire:model="workingHours" required>
+                        <option value="24_7">{{ __('bot.always_active') }}</option>
+                        <option value="working_hours">{{ __('bot.specific_hours') }}</option>
+                    </flux:select>
+                    <flux:error name="workingHours" />
+                </flux:field>
+
+                <flux:field class="col-span-2">
+                    <flux:checkbox wire:model="active" label="{{ __('bot.bot_active_checkbox') }}" />
+                </flux:field>
+            </div>
+
+            {{-- Escalation Rules --}}
+            <div class="border-t border-neutral-200 pt-4 dark:border-neutral-700 space-y-4">
+                <h3 class="text-sm font-semibold text-neutral-600 dark:text-neutral-400">{{ __('bot.escalation_rules_heading') }}</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <flux:field>
+                        <flux:label>{{ __('bot.lead_score_threshold_label') }}</flux:label>
+                        <flux:input type="number" wire:model="scoreThreshold" required />
+                        <flux:error name="scoreThreshold" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>{{ __('bot.unproductive_messages_threshold_label') }}</flux:label>
+                        <flux:input type="number" wire:model="unproductiveMessages" required />
+                        <flux:error name="unproductiveMessages" />
+                    </flux:field>
+                </div>
+            </div>
+
+            {{-- Follow-Up Rules --}}
+            <div class="border-t border-neutral-200 pt-4 dark:border-neutral-700 space-y-4">
+                <h3 class="text-sm font-semibold text-neutral-600 dark:text-neutral-400">{{ __('bot.followup_rules_heading') }}</h3>
                 <div class="grid grid-cols-2 gap-4">
                     <flux:field class="col-span-2">
-                        <flux:label>اسم المساعد (الروبوت)</flux:label>
-                        <flux:input wire:model="botName" required />
-                        <flux:error name="botName" />
+                        <flux:checkbox wire:model="followUpsEnabled" label="{{ __('bot.followups_enabled_checkbox') }}" />
                     </flux:field>
 
                     <flux:field>
-                        <flux:label>اللهجة المفضلة للمحادثة</flux:label>
-                        <flux:select wire:model="tone" required>
-                            <option value="friendly_egyptian">عامية مصرية ودودة</option>
-                            <option value="formal">عربية فصحى مبسطة</option>
-                            <option value="gulf">لهجة خليجية ملائمة</option>
-                        </flux:select>
-                        <flux:error name="tone" />
-                    </flux:field>
-
-                    <flux:field>
-                        <flux:label>مواعيد عمل الشركة</flux:label>
-                        <flux:select wire:model="workingHours" required>
-                            <option value="24_7">طوال اليوم 24/7</option>
-                            <option value="working_hours">ساعات عمل محددة (9 ص - 9 م)</option>
-                        </flux:select>
-                        <flux:error name="workingHours" />
-                    </flux:field>
-
-                    <flux:field class="col-span-2">
-                        <flux:checkbox wire:model="active" label="تنشيط المساعد (البوت فعال ويرد على العملاء)" />
+                        <flux:label>{{ __('bot.max_followups_label') }}</flux:label>
+                        <flux:input type="number" wire:model="maxFollowUps" required />
+                        <flux:error name="maxFollowUps" />
                     </flux:field>
                 </div>
+            </div>
 
-                {{-- Escalation Rules --}}
-                <div class="border-t border-neutral-200 pt-4 dark:border-neutral-700 space-y-4">
-                    <h3 class="text-sm font-semibold text-neutral-600 dark:text-neutral-400">قواعد التحويل لوكيل بشري</h3>
-                    <div class="grid grid-cols-2 gap-4">
-                        <flux:field>
-                            <flux:label>درجة الاهتمام المطلوبة للتحويل (Lead Score)</flux:label>
-                            <flux:input type="number" wire:model="scoreThreshold" required />
-                            <flux:error name="scoreThreshold" />
-                        </flux:field>
+            <div class="flex justify-start">
+                <flux:button type="submit" variant="primary">{{ __('bot.save') }}</flux:button>
+            </div>
+        </form>
+    </div>
 
-                        <flux:field>
-                            <flux:label>أقصى عدد رسائل غير منتجة قبل التحويل</flux:label>
-                            <flux:input type="number" wire:model="unproductiveMessages" required />
-                            <flux:error name="unproductiveMessages" />
-                        </flux:field>
+    {{-- Test Bot Box --}}
+    <div class="w-96 shrink-0 flex flex-col rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-zinc-900">
+        <div class="border-b border-neutral-200 px-4 py-3 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 rounded-t-xl">
+            <h2 class="text-sm font-semibold">{{ __('bot.test_assistant_heading') }}</h2>
+            <p class="text-[10px] text-neutral-500 mt-1">{{ __('bot.test_assistant_desc') }}</p>
+        </div>
+
+        {{-- Chat History --}}
+        <div class="flex-1 space-y-3 overflow-y-auto p-4 max-h-[400px]">
+            @forelse ($this->sandboxMessages as $message)
+                <div class="flex {{ $message->direction === 'inbound' ? 'justify-start' : 'justify-end' }}">
+                    <div class="max-w-[80%] rounded-xl px-3 py-1.5 text-xs {{ $message->direction === 'inbound' ? 'bg-neutral-100 dark:bg-neutral-800' : 'bg-blue-500 text-white' }}">
+                        <p>{{ $message->body }}</p>
                     </div>
                 </div>
-
-                {{-- Follow-Up Rules --}}
-                <div class="border-t border-neutral-200 pt-4 dark:border-neutral-700 space-y-4">
-                    <h3 class="text-sm font-semibold text-neutral-600 dark:text-neutral-400">إعدادات المتابعة التلقائية</h3>
-                    <div class="grid grid-cols-2 gap-4">
-                        <flux:field class="col-span-2">
-                            <flux:checkbox wire:model="followUpsEnabled" label="تمكين المتابعة التلقائية للعملاء (إعادة تنشيط العملاء غير النشطين)" />
-                        </flux:field>
-
-                        <flux:field>
-                            <flux:label>أقصى عدد رسائل متابعة لكل عميل</flux:label>
-                            <flux:input type="number" wire:model="maxFollowUps" required />
-                            <flux:error name="maxFollowUps" />
-                        </flux:field>
-                    </div>
+            @empty
+                <div class="flex h-full items-center justify-center py-20 text-center">
+                    <p class="text-xs text-neutral-500">{{ __('bot.test_assistant_placeholder') }}</p>
                 </div>
+            @endforelse
+        </div>
 
-                <div class="flex justify-start">
-                    <flux:button type="submit" variant="primary">حفظ الإعدادات</flux:button>
-                </div>
+        {{-- Message Composer --}}
+        <div class="border-t border-neutral-200 p-3 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 rounded-b-xl">
+            <form wire:submit="sendTestMessage" class="flex gap-2">
+                <flux:input wire:model="testMessage" placeholder="{{ __('bot.test_message_input_placeholder') }}" class="flex-1" />
+                <flux:button type="submit" size="sm" variant="primary">{{ __('bot.send') }}</flux:button>
             </form>
         </div>
-
-        {{-- Test Bot Box --}}
-        <div class="w-96 shrink-0 flex flex-col rounded-xl border border-neutral-200 dark:border-neutral-700">
-            <div class="border-b border-neutral-200 px-4 py-3 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50">
-                <h2 class="text-sm font-semibold">اختبار المساعد</h2>
-                <p class="text-[10px] text-neutral-500 mt-1">تحدث مع المساعد لتجربة لهجته وطريقة الرد (لن يتم إرسال رسائل فعلية للواتساب).</p>
-            </div>
-
-            {{-- Chat History --}}
-            <div class="flex-1 space-y-3 overflow-y-auto p-4 max-h-[400px]">
-                @forelse ($this->sandboxMessages as $message)
-                    <div class="flex {{ $message->direction === 'inbound' ? 'justify-start' : 'justify-end' }}">
-                        <div class="max-w-[80%] rounded-xl px-3 py-1.5 text-xs {{ $message->direction === 'inbound' ? 'bg-neutral-100 dark:bg-neutral-800' : 'bg-blue-500 text-white' }}">
-                            <p>{{ $message->body }}</p>
-                        </div>
-                    </div>
-                @empty
-                    <div class="flex h-full items-center justify-center py-20 text-center">
-                        <p class="text-xs text-neutral-500">اكتب رسالة لبدء اختبار المساعد.</p>
-                    </div>
-                @endforelse
-            </div>
-
-            {{-- Message Composer --}}
-            <div class="border-t border-neutral-200 p-3 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50">
-                <form wire:submit="sendTestMessage" class="flex gap-2">
-                    <flux:input wire:model="testMessage" placeholder="اكتب رسالة..." class="flex-1" />
-                    <flux:button type="submit" size="sm" variant="primary">إرسال</flux:button>
-                </form>
-            </div>
-        </div>
     </div>
+</div>

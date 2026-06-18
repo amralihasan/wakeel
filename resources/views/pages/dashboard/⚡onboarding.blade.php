@@ -6,7 +6,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Title('إعداد المنصة')] #[Layout('layouts.auth')] class extends Component {
+new #[Title('dashboard.onboarding_title')] #[Layout('layouts.auth')] class extends Component {
     public int $step = 1;
 
     // Step 1: Company details
@@ -119,10 +119,15 @@ new #[Title('إعداد المنصة')] #[Layout('layouts.auth')] class extends 
     }
 }; ?>
 
-<div class="w-full max-w-lg rounded-2xl bg-white p-8 shadow-xl border border-neutral-200 dark:bg-zinc-900 dark:border-neutral-800" dir="rtl">
+<div class="w-full max-w-lg rounded-2xl bg-white p-8 shadow-xl border border-neutral-200 dark:bg-zinc-900 dark:border-neutral-800" dir="{{ $dir ?? (app()->getLocale() === 'ar' ? 'rtl' : 'ltr') }}">
     {{-- Steps Progress Bar --}}
     <div class="mb-8 flex items-center justify-between border-b border-neutral-150 pb-4 dark:border-neutral-800">
-        @foreach ([1 => 'تفاصيل الشركة', 2 => 'الباقة', 3 => 'رقم واتساب', 4 => 'إعداد المساعد'] as $index => $label)
+        @foreach ([
+            1 => __('dashboard.step_company_details'),
+            2 => __('dashboard.step_plan'),
+            3 => __('dashboard.step_whatsapp_number'),
+            4 => __('dashboard.step_bot_setup')
+        ] as $index => $label)
             <div class="flex flex-col items-center gap-1">
                 <div class="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition {{ $step === $index ? 'bg-indigo-600 text-white' : ($step > $index ? 'bg-green-600 text-white' : 'bg-neutral-100 text-neutral-500 dark:bg-neutral-800') }}">
                     {{ $step > $index ? '✓' : $index }}
@@ -135,29 +140,29 @@ new #[Title('إعداد المنصة')] #[Layout('layouts.auth')] class extends 
     {{-- Step 1: Company Info --}}
     @if ($step === 1)
         <div class="space-y-6">
-            <flux:heading size="lg">تأكيد تفاصيل الشركة</flux:heading>
-            <flux:text>يرجى مراجعة وتأكيد بيانات الشركة الأساسية للمتابعة.</flux:text>
+            <flux:heading size="lg">{{ __('dashboard.confirm_company_details') }}</flux:heading>
+            <flux:text>{{ __('dashboard.confirm_company_details_subtitle') }}</flux:text>
 
             <flux:field>
-                <flux:label>اسم الشركة</flux:label>
+                <flux:label>{{ __('dashboard.company_name') }}</flux:label>
                 <flux:input wire:model="companyName" required />
                 <flux:error name="companyName" />
             </flux:field>
 
             <flux:field>
-                <flux:label>البريد الإلكتروني للشركة</flux:label>
+                <flux:label>{{ __('dashboard.company_email') }}</flux:label>
                 <flux:input type="email" wire:model="companyEmail" required />
                 <flux:error name="companyEmail" />
             </flux:field>
 
             <flux:field>
-                <flux:label>رقم هاتف التواصل</flux:label>
+                <flux:label>{{ __('dashboard.company_phone') }}</flux:label>
                 <flux:input wire:model="companyPhone" required />
                 <flux:error name="companyPhone" />
             </flux:field>
 
             <div class="flex justify-end pt-4">
-                <flux:button variant="primary" wire:click="nextStep">التالي</flux:button>
+                <flux:button variant="primary" wire:click="nextStep">{{ __('dashboard.next') }}</flux:button>
             </div>
         </div>
     @endif
@@ -165,22 +170,22 @@ new #[Title('إعداد المنصة')] #[Layout('layouts.auth')] class extends 
     {{-- Step 2: Choose Plan --}}
     @if ($step === 2)
         <div class="space-y-6">
-            <flux:heading size="lg">اختر باقة الاشتراك</flux:heading>
-            <flux:text>ابدأ نسختك التجريبية المجانية اليوم.</flux:text>
+            <flux:heading size="lg">{{ __('dashboard.choose_subscription_plan') }}</flux:heading>
+            <flux:text>{{ __('dashboard.choose_subscription_plan_subtitle') }}</flux:text>
 
             <div class="rounded-xl border border-indigo-200 bg-indigo-50/20 p-4 dark:border-indigo-900 dark:bg-indigo-900/10">
                 <div class="flex items-start justify-between">
                     <div>
-                        <h4 class="font-bold text-indigo-900 dark:text-indigo-400">الباقة الأساسية (تجريبية)</h4>
-                        <p class="text-xs text-neutral-500 mt-1">تتضمن مساعد عقاري واحد، وإدارة غير محدودة للوحدات، و14 يوم تجربة مجانية.</p>
+                        <h4 class="font-bold text-indigo-900 dark:text-indigo-400">{{ __('dashboard.starter_plan_title') }}</h4>
+                        <p class="text-xs text-neutral-500 mt-1">{{ __('dashboard.starter_plan_desc') }}</p>
                     </div>
-                    <flux:badge variant="success">مجاني حالياً</flux:badge>
+                    <flux:badge variant="success">{{ __('dashboard.free_now') }}</flux:badge>
                 </div>
             </div>
 
             <div class="flex justify-between pt-4">
-                <flux:button variant="ghost" wire:click="previousStep">السابق</flux:button>
-                <flux:button variant="primary" wire:click="nextStep">التالي</flux:button>
+                <flux:button variant="ghost" wire:click="previousStep">{{ __('dashboard.previous') }}</flux:button>
+                <flux:button variant="primary" wire:click="nextStep">{{ __('dashboard.next') }}</flux:button>
             </div>
         </div>
     @endif
@@ -188,11 +193,11 @@ new #[Title('إعداد المنصة')] #[Layout('layouts.auth')] class extends 
     {{-- Step 3: WhatsApp Number Provision --}}
     @if ($step === 3)
         <div class="space-y-6">
-            <flux:heading size="lg">تفعيل رقم واتساب المساعد</flux:heading>
-            <flux:text>تم تهيئة رقم الواتساب المخصص لمساعدك الذكي بنجاح.</flux:text>
+            <flux:heading size="lg">{{ __('dashboard.activate_whatsapp_number') }}</flux:heading>
+            <flux:text>{{ __('dashboard.activate_whatsapp_number_subtitle') }}</flux:text>
 
             <div class="flex flex-col items-center justify-center p-6 bg-neutral-50 rounded-xl dark:bg-neutral-800/50">
-                <p class="text-xs font-semibold text-neutral-500">رقم واتساب المساعد:</p>
+                <p class="text-xs font-semibold text-neutral-500">{{ __('dashboard.assistant_whatsapp_number') }}</p>
                 <h3 class="text-xl font-bold text-indigo-600 mt-1" dir="ltr">{{ $whatsappNumber }}</h3>
 
                 @if ($qrCodeUrl)
@@ -200,14 +205,14 @@ new #[Title('إعداد المنصة')] #[Layout('layouts.auth')] class extends 
                         <img src="{{ $qrCodeUrl }}" alt="WhatsApp QR Code" class="h-32 w-32" />
                     </div>
                     <a href="{{ $waLink }}" target="_blank" class="mt-3 text-xs text-indigo-500 underline hover:text-indigo-600">
-                        اضغط هنا للتحدث مع البوت مباشرة
+                        {{ __('dashboard.click_here_chat_bot') }}
                     </a>
                 @endif
             </div>
 
             <div class="flex justify-between pt-4">
-                <flux:button variant="ghost" wire:click="previousStep">السابق</flux:button>
-                <flux:button variant="primary" wire:click="nextStep">التالي</flux:button>
+                <flux:button variant="ghost" wire:click="previousStep">{{ __('dashboard.previous') }}</flux:button>
+                <flux:button variant="primary" wire:click="nextStep">{{ __('dashboard.next') }}</flux:button>
             </div>
         </div>
     @endif
@@ -215,28 +220,28 @@ new #[Title('إعداد المنصة')] #[Layout('layouts.auth')] class extends 
     {{-- Step 4: Bot Personality --}}
     @if ($step === 4)
         <div class="space-y-6">
-            <flux:heading size="lg">إعداد المساعد الذكي</flux:heading>
-            <flux:text>حدد اسم المساعد ولهجته لبناء شخصيته التفاعلية.</flux:text>
+            <flux:heading size="lg">{{ __('dashboard.setup_smart_assistant') }}</flux:heading>
+            <flux:text>{{ __('dashboard.setup_smart_assistant_subtitle') }}</flux:text>
 
             <flux:field>
-                <flux:label>اسم المساعد (الروبوت)</flux:label>
+                <flux:label>{{ __('dashboard.assistant_bot_name') }}</flux:label>
                 <flux:input wire:model="botName" required />
                 <flux:error name="botName" />
             </flux:field>
 
             <flux:field>
-                <flux:label>اللهجة المفضلة للمحادثة</flux:label>
+                <flux:label>{{ __('dashboard.preferred_conversation_tone') }}</flux:label>
                 <flux:select wire:model="tone" required>
-                    <option value="friendly_egyptian">عامية مصرية ودودة</option>
-                    <option value="formal">عربية فصحى مبسطة</option>
-                    <option value="gulf">لهجة خليجية ملائمة</option>
+                    <option value="friendly_egyptian">{{ __('dashboard.friendly_egyptian') }}</option>
+                    <option value="formal">{{ __('dashboard.formal_arabic') }}</option>
+                    <option value="gulf">{{ __('dashboard.gulf_dialect') }}</option>
                 </flux:select>
                 <flux:error name="tone" />
             </flux:field>
 
             <div class="flex justify-between pt-4">
-                <flux:button variant="ghost" wire:click="previousStep">السابق</flux:button>
-                <flux:button variant="primary" wire:click="complete">تفعيل وإضافة الوحدات</flux:button>
+                <flux:button variant="ghost" wire:click="previousStep">{{ __('dashboard.previous') }}</flux:button>
+                <flux:button variant="primary" wire:click="complete">{{ __('dashboard.activate_add_units') }}</flux:button>
             </div>
         </div>
     @endif

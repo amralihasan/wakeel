@@ -13,7 +13,7 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
-new #[Title('لوحة التحكم')] #[Layout('layouts.app')] class extends Component {
+new #[Title('dashboard.title')] #[Layout('layouts.app')] class extends Component {
     public int $companyId;
 
     public function mount(): void
@@ -138,7 +138,7 @@ new #[Title('لوحة التحكم')] #[Layout('layouts.app')] class extends Com
             ->get()
             ->map(fn($item) => [
                 'type' => 'new_lead',
-                'title' => 'عميل جديد مهتم: ' . ($item->name ?: $item->customer_phone),
+                'title' => __('dashboard.new_lead_activity', ['name' => ($item->name ?: $item->customer_phone)]),
                 'time' => $item->created_at,
                 'icon' => 'user-plus',
                 'badge_color' => 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400',
@@ -150,7 +150,10 @@ new #[Title('لوحة التحكم')] #[Layout('layouts.app')] class extends Com
             ->get()
             ->map(fn($item) => [
                 'type' => 'visit_booked',
-                'title' => 'حجز زيارة للعميل ' . ($item->lead?->name ?: $item->lead?->customer_phone) . ' لوحدة ' . ($item->unit?->title ?? 'عقارية'),
+                'title' => __('dashboard.visit_booked_activity', [
+                    'lead' => ($item->lead?->name ?: $item->lead?->customer_phone),
+                    'unit' => ($item->unit?->title ?? __('dashboard.real_estate_unit'))
+                ]),
                 'time' => $item->created_at,
                 'icon' => 'calendar-days',
                 'badge_color' => 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400',
@@ -162,7 +165,9 @@ new #[Title('لوحة التحكم')] #[Layout('layouts.app')] class extends Com
             ->get()
             ->map(fn($item) => [
                 'type' => 'escalated',
-                'title' => 'تحويل محادثة العميل ' . ($item->lead?->name ?: $item->lead?->customer_phone) . ' لوكيل بشري',
+                'title' => __('dashboard.escalated_activity', [
+                    'lead' => ($item->lead?->name ?: $item->lead?->customer_phone)
+                ]),
                 'time' => $item->created_at,
                 'icon' => 'arrow-right-start-on-rectangle',
                 'badge_color' => 'bg-rose-50 text-rose-700 dark:bg-rose-900/20 dark:text-rose-400',
@@ -205,13 +210,13 @@ new #[Title('لوحة التحكم')] #[Layout('layouts.app')] class extends Com
     }
 }; ?>
 
-<div class="space-y-6" dir="rtl">
+<div class="space-y-6" dir="{{ $dir ?? (app()->getLocale() === 'ar' ? 'rtl' : 'ltr') }}">
     {{-- Top Heading --}}
     <div class="flex items-center justify-between">
-        <h1 class="text-2xl font-bold tracking-tight">نظرة عامة على المنصة</h1>
+        <h1 class="text-2xl font-bold tracking-tight">{{ __('dashboard.overview_title') }}</h1>
         <div class="flex items-center gap-4">
             <div class="text-sm text-neutral-500">
-                تاريخ اليوم: {{ now()->translatedFormat('l, d F Y') }}
+                {{ __('dashboard.today_date', ['date' => now()->translatedFormat('l, d F Y')]) }}
             </div>
         </div>
     </div>
@@ -236,7 +241,7 @@ new #[Title('لوحة التحكم')] #[Layout('layouts.app')] class extends Com
             </div>
             <div class="flex items-center gap-4">
                 <span class="text-xs text-neutral-500">
-                    المحادثات: <strong>{{ $convUsed }}</strong> / {{ $convLimit === -1 ? 'غير محدود' : $convLimit }}
+                    {{ __('dashboard.conversations') }}: <strong>{{ $convUsed }}</strong> / {{ $convLimit === -1 ? __('dashboard.unlimited') : $convLimit }}
                 </span>
                 @if ($convLimit > 0)
                     <div class="h-2 w-24 rounded-full bg-neutral-100 dark:bg-neutral-800">
@@ -244,11 +249,11 @@ new #[Title('لوحة التحكم')] #[Layout('layouts.app')] class extends Com
                     </div>
                 @endif
                 @if ($company->hasReachedConversationsLimit())
-                    <flux:badge variant="danger" size="sm">تم استهلاك الحد الأقصى</flux:badge>
+                    <flux:badge variant="danger" size="sm">{{ __('dashboard.limit_reached') }}</flux:badge>
                 @elseif ($convPct >= 80)
-                    <flux:badge variant="warning" size="sm">اقتربت من الحد الأقصى</flux:badge>
+                    <flux:badge variant="warning" size="sm">{{ __('dashboard.limit_warning') }}</flux:badge>
                 @endif
-                <flux:button size="xs" variant="ghost" :href="route('billing.index')" wire:navigate>إدارة الاشتراك</flux:button>
+                <flux:button size="xs" variant="ghost" :href="route('billing.index')" wire:navigate>{{ __('dashboard.manage_subscription') }}</flux:button>
             </div>
         </div>
     </div>
@@ -258,7 +263,7 @@ new #[Title('لوحة التحكم')] #[Layout('layouts.app')] class extends Com
         {{-- Card 1: Conversations Today --}}
         <div class="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs dark:border-neutral-700 dark:bg-zinc-900">
             <div class="flex items-center justify-between">
-                <span class="text-sm font-medium text-neutral-500">محادثات اليوم</span>
+                <span class="text-sm font-medium text-neutral-500">{{ __('dashboard.conversations_today') }}</span>
                 <flux:icon name="chat-bubble-left-right" class="h-5 w-5 text-neutral-400" />
             </div>
             <div class="mt-2 flex items-baseline gap-2">
@@ -267,13 +272,13 @@ new #[Title('لوحة التحكم')] #[Layout('layouts.app')] class extends Com
                     {{ $this->stats['conversations_delta'] >= 0 ? '↑' : '↓' }} {{ abs($this->stats['conversations_delta']) }}%
                 </span>
             </div>
-            <p class="text-[10px] text-neutral-400 mt-1">مقارنة بيوم أمس</p>
+            <p class="text-[10px] text-neutral-400 mt-1">{{ __('dashboard.vs_yesterday_desc') }}</p>
         </div>
 
         {{-- Card 2: Hot Leads --}}
         <div class="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs dark:border-neutral-700 dark:bg-zinc-900">
             <div class="flex items-center justify-between">
-                <span class="text-sm font-medium text-neutral-500">العملاء المميزين (Hot)</span>
+                <span class="text-sm font-medium text-neutral-500">{{ __('dashboard.hot_leads_card') }}</span>
                 <flux:icon name="fire" class="h-5 w-5 text-rose-500" />
             </div>
             <div class="mt-2 flex items-baseline gap-2">
@@ -282,13 +287,13 @@ new #[Title('لوحة التحكم')] #[Layout('layouts.app')] class extends Com
                     {{ $this->stats['hot_leads_delta'] >= 0 ? '↑' : '↓' }} {{ abs($this->stats['hot_leads_delta']) }}%
                 </span>
             </div>
-            <p class="text-[10px] text-neutral-400 mt-1">مقارنة بإجمالي الأمس</p>
+            <p class="text-[10px] text-neutral-400 mt-1">{{ __('dashboard.vs_yesterday_total') }}</p>
         </div>
 
         {{-- Card 3: Viewings This Week --}}
         <div class="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs dark:border-neutral-700 dark:bg-zinc-900">
             <div class="flex items-center justify-between">
-                <span class="text-sm font-medium text-neutral-500">معاينات هذا الأسبوع</span>
+                <span class="text-sm font-medium text-neutral-500">{{ __('dashboard.viewings_this_week_card') }}</span>
                 <flux:icon name="calendar-days" class="h-5 w-5 text-neutral-400" />
             </div>
             <div class="mt-2 flex items-baseline gap-2">
@@ -297,22 +302,22 @@ new #[Title('لوحة التحكم')] #[Layout('layouts.app')] class extends Com
                     {{ $this->stats['viewings_delta'] >= 0 ? '↑' : '↓' }} {{ abs($this->stats['viewings_delta']) }}%
                 </span>
             </div>
-            <p class="text-[10px] text-neutral-400 mt-1">مقارنة بالأسبوع الماضي</p>
+            <p class="text-[10px] text-neutral-400 mt-1">{{ __('dashboard.vs_last_week') }}</p>
         </div>
 
         {{-- Card 4: Avg Response Time --}}
         <div class="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs dark:border-neutral-700 dark:bg-zinc-900">
             <div class="flex items-center justify-between">
-                <span class="text-sm font-medium text-neutral-500">معدل سرعة الرد</span>
+                <span class="text-sm font-medium text-neutral-500">{{ __('dashboard.avg_response_time_card') }}</span>
                 <flux:icon name="clock" class="h-5 w-5 text-neutral-400" />
             </div>
             <div class="mt-2 flex items-baseline gap-2">
-                <span class="text-3xl font-semibold tracking-tight">{{ $this->stats['avg_response_time'] }} <span class="text-xs text-neutral-500">دقيقة</span></span>
+                <span class="text-3xl font-semibold tracking-tight">{{ $this->stats['avg_response_time'] }} <span class="text-xs text-neutral-500">{{ __('dashboard.minutes') }}</span></span>
                 <span class="inline-flex items-center text-xs font-medium {{ $this->stats['avg_response_delta'] <= 0 ? 'text-green-600' : 'text-red-600' }}">
                     {{ $this->stats['avg_response_delta'] <= 0 ? '↓' : '↑' }} {{ abs($this->stats['avg_response_delta']) }}%
                 </span>
             </div>
-            <p class="text-[10px] text-neutral-400 mt-1">مقارنة بمتوسط الأمس (الأقل أفضل)</p>
+            <p class="text-[10px] text-neutral-400 mt-1">{{ __('dashboard.vs_yesterday_avg') }}</p>
         </div>
     </div>
 
@@ -322,7 +327,7 @@ new #[Title('لوحة التحكم')] #[Layout('layouts.app')] class extends Com
         <div class="lg:col-span-2 space-y-6">
             {{-- Weekly Chart Panel --}}
             <div class="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-zinc-900">
-                <h3 class="text-sm font-semibold mb-4">نشاط الرسائل الأسبوعي</h3>
+                <h3 class="text-sm font-semibold mb-4">{{ __('dashboard.message_volume') }}</h3>
                 <div class="flex items-end justify-between h-48 pt-4 gap-2">
                     @foreach ($this->weeklyChartData as $day)
                         <div class="flex-1 flex flex-col items-center gap-2">
@@ -338,7 +343,7 @@ new #[Title('لوحة التحكم')] #[Layout('layouts.app')] class extends Com
 
             {{-- Recent Activity Feed --}}
             <div class="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-zinc-900">
-                <h3 class="text-sm font-semibold mb-4">آخر النشاطات الحالية</h3>
+                <h3 class="text-sm font-semibold mb-4">{{ __('dashboard.recent_activity') }}</h3>
                 <div class="flow-root">
                     <ul role="list" class="-mb-8">
                         @forelse ($this->recentActivities as $index => $activity)
@@ -365,7 +370,7 @@ new #[Title('لوحة التحكم')] #[Layout('layouts.app')] class extends Com
                                 </div>
                             </li>
                         @empty
-                            <p class="text-center py-6 text-xs text-neutral-500">لا توجد نشاطات مسجلة بعد.</p>
+                            <p class="text-center py-6 text-xs text-neutral-500">{{ __('dashboard.no_activity') }}</p>
                         @endforelse
                     </ul>
                 </div>
@@ -375,8 +380,8 @@ new #[Title('لوحة التحكم')] #[Layout('layouts.app')] class extends Com
         {{-- Side column: Latest Leads --}}
         <div class="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-zinc-900 h-fit">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="text-sm font-semibold">آخر العملاء المضافين</h3>
-                <a href="{{ route('dashboard.leads') }}" class="text-xs text-indigo-600 underline hover:text-indigo-700">عرض الكل</a>
+                <h3 class="text-sm font-semibold">{{ __('dashboard.latest_leads') }}</h3>
+                <a href="{{ route('dashboard.leads') }}" class="text-xs text-indigo-600 underline hover:text-indigo-700">{{ __('dashboard.view_all') }}</a>
             </div>
 
             <div class="space-y-4">
@@ -386,9 +391,9 @@ new #[Title('لوحة التحكم')] #[Layout('layouts.app')] class extends Com
                             <h4 class="text-xs font-semibold truncate">{{ $lead->name ?: $lead->customer_phone }}</h4>
                             <p class="text-[10px] text-neutral-500 mt-1 truncate">
                                 @if ($lead->interestedUnit)
-                                    مهتم بـ: {{ $lead->interestedUnit->title }}
+                                    {{ __('dashboard.interested_in', ['unit' => $lead->interestedUnit->title]) }}
                                 @else
-                                    بدون اهتمام محدد
+                                    {{ __('dashboard.no_specific_interest') }}
                                 @endif
                             </p>
                         </div>
@@ -407,7 +412,7 @@ new #[Title('لوحة التحكم')] #[Layout('layouts.app')] class extends Com
                         </div>
                     </div>
                 @empty
-                    <p class="text-center py-10 text-xs text-neutral-500">لا يوجد عملاء بعد.</p>
+                    <p class="text-center py-10 text-xs text-neutral-500">{{ __('dashboard.no_leads') }}</p>
                 @endforelse
             </div>
         </div>

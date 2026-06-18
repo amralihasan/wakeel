@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ $dir ?? (app()->getLocale() === 'ar' ? 'rtl' : 'ltr') }}">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -21,6 +21,16 @@
         <header class="w-full lg:max-w-4xl max-w-[335px] text-sm mb-6 not-has-[nav]:hidden">
             @if (Route::has('login'))
                 <nav class="flex items-center justify-end gap-4">
+                    @if(app()->getLocale() === 'ar')
+                        <a href="{{ route('locale.switch', 'en') }}" class="dark:text-[#EDEDEC] text-[#1b1b18] hover:underline text-sm font-semibold">
+                            English
+                        </a>
+                    @else
+                        <a href="{{ route('locale.switch', 'ar') }}" class="dark:text-[#EDEDEC] text-[#1b1b18] hover:underline text-sm font-semibold">
+                            العربية
+                        </a>
+                    @endif
+
                     @auth
                         <a
                             href="{{ route('dashboard') }}"

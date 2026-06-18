@@ -13,7 +13,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Title('تفاصيل العميل')] #[Layout('layouts.app')] class extends Component {
+new #[Title('leads.lead_profile')] #[Layout('layouts.app')] class extends Component {
     public Lead $lead;
 
     public string $activeTab = 'chat';
@@ -52,12 +52,12 @@ new #[Title('تفاصيل العميل')] #[Layout('layouts.app')] class extends
 
         // 1. Lead Created Event
         $events->push([
-            'title' => 'تم تسجيل العميل في النظام',
-            'description' => 'عبر ' . match ($this->lead->source) {
-                'facebook' => 'إعلانات فيسبوك',
-                'website' => 'موقع الشركة',
-                'qr' => 'رمز الاستجابة السريعة (QR)',
-                default => 'مصدر آخر'
+            'title' => __('leads.event_registered'),
+            'description' => __('leads.source') . ': ' . match ($this->lead->source) {
+                'facebook' => __('leads.source_facebook'),
+                'website' => __('leads.source_website'),
+                'qr' => __('leads.source_qr'),
+                default => __('leads.source_other')
             },
             'time' => $this->lead->created_at,
             'icon' => 'user-plus',
@@ -68,8 +68,11 @@ new #[Title('تفاصيل العميل')] #[Layout('layouts.app')] class extends
         $visits = Visit::where('lead_id', $this->lead->id)->get();
         foreach ($visits as $visit) {
             $events->push([
-                'title' => 'تم حجز موعد زيارة للمعاينة',
-                'description' => 'عقار: ' . ($visit->unit?->title ?? 'غير معروف') . ' | الحالة: ' . $visit->status->value,
+                'title' => __('leads.event_visit_booked'),
+                'description' => __('leads.event_visit_desc', [
+                    'unit' => ($visit->unit?->title ?? __('leads.unknown')),
+                    'status' => $visit->status->value
+                ]),
                 'time' => $visit->created_at,
                 'icon' => 'calendar-days',
                 'color' => 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400',
@@ -80,8 +83,11 @@ new #[Title('تفاصيل العميل')] #[Layout('layouts.app')] class extends
         $handoffs = Handoff::where('lead_id', $this->lead->id)->get();
         foreach ($handoffs as $handoff) {
             $events->push([
-                'title' => 'تم تحويل المحادثة لوكيل بشري',
-                'description' => 'السبب: ' . $handoff->reason . ' | الملخص: ' . $handoff->ai_summary,
+                'title' => __('leads.event_escalated'),
+                'description' => __('leads.event_escalated_desc', [
+                    'reason' => $handoff->reason,
+                    'summary' => $handoff->ai_summary
+                ]),
                 'time' => $handoff->created_at,
                 'icon' => 'arrow-right-start-on-rectangle',
                 'color' => 'bg-rose-50 text-rose-700 dark:bg-rose-900/20 dark:text-rose-400',
@@ -95,14 +101,19 @@ new #[Title('تفاصيل العميل')] #[Layout('layouts.app')] class extends
             $timestamp = isset($data['scored_at']) ? \Carbon\Carbon::parse($data['scored_at']) : $this->lead->updated_at;
             
             $events->push([
-                'title' => 'تحقيق إشارة تفاعل: ' . match ($signal) {
-                    'asked_price' => 'الاستفسار عن الأسعار (+10)',
-                    'asked_installment' => 'الاستفسار عن التقسيط (+15)',
-                    'asked_media' => 'طلب الوسائط/البروشور (+20)',
-                    'booked_visit' => 'حجز موعد معاينة (+30)',
-                    default => $signal
-                },
-                'description' => 'تم إضافة ' . $points . ' نقاط لتقييم العميل لتصبح النتيجة الكلية ' . $this->lead->score,
+                'title' => __('leads.event_signal_achieved', [
+                    'signal' => match ($signal) {
+                        'asked_price' => __('leads.signal_asked_price'),
+                        'asked_installment' => __('leads.signal_asked_installment'),
+                        'asked_media' => __('leads.signal_asked_media'),
+                        'booked_visit' => __('leads.signal_booked_visit'),
+                        default => $signal
+                    }
+                ]),
+                'description' => __('leads.event_signal_desc', [
+                    'points' => $points,
+                    'score' => $this->lead->score
+                ]),
                 'time' => $timestamp,
                 'icon' => 'bolt',
                 'color' => 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400',
@@ -113,13 +124,13 @@ new #[Title('تفاصيل العميل')] #[Layout('layouts.app')] class extends
     }
 }; ?>
 
-<div class="space-y-6" dir="rtl">
+<div class="space-y-6" dir="{{ $dir ?? (app()->getLocale() === 'ar' ? 'rtl' : 'ltr') }}">
     {{-- Header with back button --}}
     <div class="flex items-center gap-4">
-        <flux:button :href="route('dashboard.leads')" icon="arrow-right" size="sm" variant="ghost" wire:navigate />
+        <flux:button :href="route('dashboard.leads')" :icon="app()->getLocale() === 'ar' ? 'arrow-right' : 'arrow-left'" size="sm" variant="ghost" wire:navigate />
         <div>
-            <h1 class="text-xl font-bold tracking-tight">تفاصيل العميل: {{ $lead->name ?: $lead->customer_phone }}</h1>
-            <p class="text-xs text-neutral-500 mt-1">عرض السجل والاهتمامات ومحادثات العميل مع الروبوت والوكلاء البشريين.</p>
+            <h1 class="text-xl font-bold tracking-tight">{{ __('leads.lead_details_title', ['name' => $lead->name ?: $lead->customer_phone]) }}</h1>
+            <p class="text-xs text-neutral-500 mt-1">{{ __('leads.lead_details_subtitle') }}</p>
         </div>
     </div>
 
@@ -128,22 +139,22 @@ new #[Title('تفاصيل العميل')] #[Layout('layouts.app')] class extends
         {{-- Profile Panel (Left) --}}
         <div class="space-y-6 lg:col-span-1">
             <div class="bg-white rounded-xl border border-neutral-200 p-6 dark:bg-zinc-900 dark:border-neutral-700">
-                <h3 class="text-sm font-semibold mb-4 pb-2 border-b border-neutral-100 dark:border-neutral-800">بيانات الملف الشخصي</h3>
+                <h3 class="text-sm font-semibold mb-4 pb-2 border-b border-neutral-100 dark:border-neutral-800">{{ __('leads.profile_data') }}</h3>
                 
                 <div class="space-y-4">
                     <div>
-                        <span class="block text-[10px] text-neutral-400">الاسم</span>
-                        <span class="text-xs font-semibold text-neutral-800 dark:text-neutral-200">{{ $lead->name ?: 'غير مسجل' }}</span>
+                        <span class="block text-[10px] text-neutral-400">{{ __('leads.name') }}</span>
+                        <span class="text-xs font-semibold text-neutral-800 dark:text-neutral-200">{{ $lead->name ?: __('leads.not_specified') }}</span>
                     </div>
 
                     <div>
-                        <span class="block text-[10px] text-neutral-400">رقم الهاتف</span>
+                        <span class="block text-[10px] text-neutral-400">{{ __('leads.phone_number') }}</span>
                         <span class="text-xs font-semibold text-neutral-800 dark:text-neutral-200" dir="ltr">{{ $lead->customer_phone }}</span>
                     </div>
 
                     <div class="flex items-center justify-between">
                         <div>
-                            <span class="block text-[10px] text-neutral-400">درجة الاهتمام</span>
+                            <span class="block text-[10px] text-neutral-400">{{ __('leads.interest_score') }}</span>
                             <span class="text-xs font-semibold text-neutral-800 dark:text-neutral-200">{{ $lead->score }} / 100</span>
                         </div>
                         @if ($lead->tier)
@@ -159,7 +170,7 @@ new #[Title('تفاصيل العميل')] #[Layout('layouts.app')] class extends
                     </div>
 
                     <div>
-                        <span class="block text-[10px] text-neutral-400">حالة العميل</span>
+                        <span class="block text-[10px] text-neutral-400">{{ __('leads.lead_status') }}</span>
                         <span class="text-xs font-semibold text-neutral-800 dark:text-neutral-200">{{ $lead->status }}</span>
                     </div>
                 </div>
@@ -167,35 +178,35 @@ new #[Title('تفاصيل العميل')] #[Layout('layouts.app')] class extends
 
             {{-- Preferences Card --}}
             <div class="bg-white rounded-xl border border-neutral-200 p-6 dark:bg-zinc-900 dark:border-neutral-700">
-                <h3 class="text-sm font-semibold mb-4 pb-2 border-b border-neutral-100 dark:border-neutral-800">تفضيلات البحث العقاري</h3>
+                <h3 class="text-sm font-semibold mb-4 pb-2 border-b border-neutral-100 dark:border-neutral-800">{{ __('leads.real_estate_preferences') }}</h3>
                 
                 <div class="space-y-4">
                     <div>
-                        <span class="block text-[10px] text-neutral-400">الحد الأقصى للميزانية</span>
+                        <span class="block text-[10px] text-neutral-400">{{ __('leads.max_budget') }}</span>
                         <span class="text-xs font-semibold text-neutral-800 dark:text-neutral-200">
-                            {{ $lead->budget_max ? number_format($lead->budget_max) . ' ج.م' : 'غير محدد' }}
+                            {{ $lead->budget_max ? number_format($lead->budget_max) . ' ' . __('leads.egp') : __('leads.not_specified') }}
                         </span>
                     </div>
 
                     <div>
-                        <span class="block text-[10px] text-neutral-400">عدد الغرف المفضلة</span>
+                        <span class="block text-[10px] text-neutral-400">{{ __('leads.preferred_rooms_count') }}</span>
                         <span class="text-xs font-semibold text-neutral-800 dark:text-neutral-200">
-                            {{ $lead->preferred_rooms ? $lead->preferred_rooms . ' غرف' : 'غير محدد' }}
+                            {{ $lead->preferred_rooms ? $lead->preferred_rooms . ' ' . __('leads.rooms') : __('leads.not_specified') }}
                         </span>
                     </div>
 
                     <div>
-                        <span class="block text-[10px] text-neutral-400">الموقع المفضل</span>
-                        <span class="text-xs font-semibold text-neutral-800 dark:text-neutral-200">{{ $lead->preferred_location ?: 'غير محدد' }}</span>
+                        <span class="block text-[10px] text-neutral-400">{{ __('leads.preferred_location') }}</span>
+                        <span class="text-xs font-semibold text-neutral-800 dark:text-neutral-200">{{ $lead->preferred_location ?: __('leads.not_specified') }}</span>
                     </div>
 
                     <div>
-                        <span class="block text-[10px] text-neutral-400">العقار المهتم به</span>
+                        <span class="block text-[10px] text-neutral-400">{{ __('leads.interested_unit') }}</span>
                         <span class="text-xs font-semibold text-neutral-800 dark:text-neutral-200">
                             @if ($lead->interestedUnit)
                                 <span class="text-indigo-600">{{ $lead->interestedUnit->title }}</span>
                             @else
-                                غير محدد
+                                {{ __('leads.not_specified') }}
                             @endif
                         </span>
                     </div>
@@ -208,10 +219,10 @@ new #[Title('تفاصيل العميل')] #[Layout('layouts.app')] class extends
             {{-- Tabs Header --}}
             <div class="flex border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50">
                 <button wire:click="setTab('chat')" class="flex-1 py-3 text-xs font-bold text-center border-b-2 transition {{ $activeTab === 'chat' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-neutral-500 hover:text-neutral-700' }}">
-                    محادثات العميل
+                    {{ __('leads.client_conversations') }}
                 </button>
                 <button wire:click="setTab('timeline')" class="flex-1 py-3 text-xs font-bold text-center border-b-2 transition {{ $activeTab === 'timeline' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-neutral-500 hover:text-neutral-700' }}">
-                    سجل النشاطات والإشارات
+                    {{ __('leads.activity_signals_log') }}
                 </button>
             </div>
 
@@ -229,18 +240,18 @@ new #[Title('تفاصيل العميل')] #[Layout('layouts.app')] class extends
                                             @if (str_starts_with($message->media_type, 'image/'))
                                                 <img src="{{ $message->media_url }}" class="max-h-48 rounded" />
                                             @else
-                                                <a href="{{ $message->media_url }}" target="_blank" class="underline text-[10px]">عرض المرفق ({{ $message->media_type }})</a>
+                                                <a href="{{ $message->media_url }}" target="_blank" class="underline text-[10px]">{{ __('leads.view_attachment', ['type' => $message->media_type]) }}</a>
                                             @endif
                                         </div>
                                     @endif
                                     <span class="block text-[9px] text-left opacity-70 mt-1">
                                         {{ $message->created_at->format('H:i') }} | 
-                                        {{ $message->direction === MessageDirection::Inbound ? 'العميل' : ($message->sender === MessageSender::Bot ? 'مساعد ذكي' : 'وكيل بشري') }}
+                                        {{ $message->direction === MessageDirection::Inbound ? __('leads.client') : ($message->sender === MessageSender::Bot ? __('leads.smart_assistant') : __('dashboard.human_agent')) }}
                                     </span>
                                 </div>
                             </div>
                         @empty
-                            <div class="text-center py-20 text-neutral-400">لا توجد رسائل مسجلة لهذا العميل.</div>
+                            <div class="text-center py-20 text-neutral-400">{{ __('leads.no_messages_recorded') }}</div>
                         @endforelse
                     </div>
                 @else
@@ -272,7 +283,7 @@ new #[Title('تفاصيل العميل')] #[Layout('layouts.app')] class extends
                                     </div>
                                 </li>
                             @empty
-                                <p class="text-center py-20 text-xs text-neutral-500">لا توجد أحداث مسجلة.</p>
+                                <p class="text-center py-20 text-xs text-neutral-500">{{ __('leads.no_events_recorded') }}</p>
                             @endforelse
                         </ul>
                     </div>
