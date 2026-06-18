@@ -51,24 +51,27 @@ class LeadResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('company.name')
-                    ->label('Company')
+                    ->label(__('admin.company'))
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('customer_phone')
-                    ->label('Phone')
+                    ->label(__('admin.phone'))
                     ->formatStateUsing(fn ($state) => strlen($state) > 6
                         ? substr($state, 0, 4).'***'.substr($state, -3)
                         : $state
                     )
                     ->searchable(),
                 TextColumn::make('name')
-                    ->label('Name')
+                    ->label(__('admin.name'))
                     ->searchable(),
                 TextColumn::make('status')
+                    ->label(__('admin.lead_status'))
                     ->badge(),
                 TextColumn::make('source')
+                    ->label(__('admin.source'))
                     ->badge(),
                 TextColumn::make('created_at')
+                    ->label(__('admin.time'))
                     ->dateTime()
                     ->sortable(),
             ])

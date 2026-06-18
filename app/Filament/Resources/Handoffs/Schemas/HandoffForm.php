@@ -13,16 +13,18 @@ class HandoffForm
     {
         return $schema
             ->components([
-                Section::make('Handoff details')
+                Section::make(__('admin.handoff'))
                     ->schema([
                         Select::make('status')
+                            ->label(__('admin.status'))
                             ->options([
-                                'waiting' => 'Waiting',
-                                'active' => 'Active',
-                                'resolved' => 'Resolved',
+                                'waiting' => __('admin.pending'),
+                                'active' => __('admin.in_progress'),
+                                'resolved' => __('admin.resolved'),
                             ])
                             ->required(),
                         Textarea::make('resolution_notes')
+                            ->label(__('admin.resolution_notes'))
                             ->rows(3)
                             ->nullable(),
                     ])

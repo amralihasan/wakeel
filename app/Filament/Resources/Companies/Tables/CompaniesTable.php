@@ -22,10 +22,13 @@ class CompaniesTable
         return $table
             ->columns([
                 TextColumn::make('name')
+                    ->label(__('admin.company_name'))
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('plan')
+                    ->label(__('admin.plan'))
                     ->badge()
+                    ->formatStateUsing(fn ($state) => __('admin.'.$state))
                     ->color(fn (string $state): string => match ($state) {
                         'starter' => 'gray',
                         'growth' => 'info',
@@ -33,12 +36,12 @@ class CompaniesTable
                         default => 'gray',
                     }),
                 ToggleColumn::make('is_active')
-                    ->label('Active'),
+                    ->label(__('admin.active')),
                 TextColumn::make('whatsapp_number')
-                    ->label('Assigned Number')
+                    ->label(__('admin.assigned_number'))
                     ->searchable(),
                 TextColumn::make('conversations_count')
-                    ->label('Usage This Cycle')
+                    ->label(__('admin.usage_this_cycle'))
                     ->state(function (Company $record) {
                         $limit = $record->getPlanDetails()['conversations_limit'];
                         $limitText = $limit === -1 ? '∞' : $limit;
@@ -46,7 +49,7 @@ class CompaniesTable
                         return "{$record->conversations_count} / {$limitText}";
                     }),
                 TextColumn::make('cost')
-                    ->label('Est. Cost')
+                    ->label(__('admin.est_cost'))
                     ->state(function (Company $record) {
                         $billingStart = $record->billing_cycle_start;
                         $billingEnd = $record->billing_cycle_end;
@@ -65,7 +68,7 @@ class CompaniesTable
                         return '$'.number_format($inputCost + $outputCost + $whatsappCost, 2);
                     }),
                 TextColumn::make('revenue')
-                    ->label('Est. Revenue')
+                    ->label(__('admin.est_revenue'))
                     ->state(function (Company $record) {
                         $revenue = match ($record->plan) {
                             'starter' => 49.00,
@@ -77,7 +80,7 @@ class CompaniesTable
                         return '$'.number_format($revenue, 2);
                     }),
                 TextColumn::make('margin')
-                    ->label('Margin')
+                    ->label(__('admin.margin'))
                     ->state(function (Company $record) {
                         $billingStart = $record->billing_cycle_start;
                         $billingEnd = $record->billing_cycle_end;
@@ -109,25 +112,26 @@ class CompaniesTable
             ])
             ->filters([
                 SelectFilter::make('plan')
+                    ->label(__('admin.plan'))
                     ->options([
-                        'starter' => 'Starter',
-                        'growth' => 'Growth',
-                        'enterprise' => 'Enterprise',
+                        'starter' => __('admin.starter'),
+                        'growth' => __('admin.growth'),
+                        'enterprise' => __('admin.enterprise'),
                     ]),
                 SelectFilter::make('is_active')
-                    ->label('Status')
+                    ->label(__('admin.status'))
                     ->options([
-                        '1' => 'Active',
-                        '0' => 'Suspended',
+                        '1' => __('admin.active'),
+                        '0' => __('admin.suspended'),
                     ]),
             ])
             ->recordActions([
                 Action::make('view')
-                    ->label('View')
+                    ->label(__('admin.view'))
                     ->icon('heroicon-o-eye')
                     ->url(fn (Company $record) => "/admin/companies/{$record->id}"),
                 Action::make('suspend')
-                    ->label('Suspend')
+                    ->label(__('admin.suspend'))
                     ->requiresConfirmation()
                     ->color('danger')
                     ->icon('heroicon-o-x-circle')
@@ -145,7 +149,7 @@ class CompaniesTable
                         );
                     }),
                 Action::make('reactivate')
-                    ->label('Reactivate')
+                    ->label(__('admin.reactivate'))
                     ->requiresConfirmation()
                     ->color('success')
                     ->icon('heroicon-o-check-circle')
@@ -163,7 +167,7 @@ class CompaniesTable
                         );
                     }),
                 Action::make('impersonate')
-                    ->label('Impersonate')
+                    ->label(__('admin.impersonate'))
                     ->icon('heroicon-o-user')
                     ->color('warning')
                     ->requiresConfirmation()

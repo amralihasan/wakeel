@@ -32,27 +32,27 @@ class AdminOverviewWidget extends StatsOverviewWidget
         $totalMessagesSent = Message::where('direction', MessageDirection::Outbound)->count();
 
         return [
-            Stat::make('Total Companies', $totalCompanies)
+            Stat::make(__('admin.total_companies'), $totalCompanies)
                 ->icon('heroicon-o-building-office-2')
-                ->description('Registered tenants'),
+                ->description(__('admin.registered_tenants')),
 
-            Stat::make('Active Subscriptions', $activeSubscriptions)
+            Stat::make(__('admin.active_subscriptions'), $activeSubscriptions)
                 ->icon('heroicon-o-check-badge')
                 ->color('success')
-                ->description('Suspensions excluded'),
+                ->description(__('admin.suspensions_excluded')),
 
-            Stat::make('Estimated MRR', '$'.number_format($mrr, 2))
+            Stat::make(__('admin.estimated_mrr'), '$'.number_format($mrr, 2))
                 ->icon('heroicon-o-currency-dollar')
                 ->color('success')
-                ->description('Recurring monthly revenue'),
+                ->description(__('admin.recurring_monthly_revenue')),
 
-            Stat::make('Conversations Today', $conversationsToday)
+            Stat::make(__('admin.conversations_today'), $conversationsToday)
                 ->icon('heroicon-o-chat-bubble-left-right')
-                ->description('Started today'),
+                ->description(__('admin.started_today')),
 
-            Stat::make('Messages Sent Today', $messagesSentToday)
+            Stat::make(__('admin.messages_sent_today'), $messagesSentToday)
                 ->icon('heroicon-o-paper-airplane')
-                ->description("{$totalMessagesSent} all-time"),
+                ->description(__('admin.all_time', ['count' => $totalMessagesSent])),
         ];
     }
 }

@@ -12,15 +12,15 @@ class SubscriptionsTable
         return $table
             ->columns([
                 TextColumn::make('company.name')
-                    ->label('Company')
+                    ->label(__('admin.company'))
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('type')
-                    ->label('Plan')
+                    ->label(__('admin.plan'))
                     ->badge()
-                    ->formatStateUsing(fn ($state) => config('plans.plans.'.$state.'.name', $state)),
+                    ->formatStateUsing(fn ($state) => __('admin.'.$state)),
                 TextColumn::make('stripe_status')
-                    ->label('Status')
+                    ->label(__('admin.stripe_status'))
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'active' => 'success',
@@ -31,10 +31,10 @@ class SubscriptionsTable
                         'incomplete_expired' => 'danger',
                         default => 'gray',
                     }),
-                TextColumn::make('quantity')->label('Qty'),
-                TextColumn::make('trial_ends_at')->label('Trial Ends')->dateTime()->sortable(),
-                TextColumn::make('ends_at')->label('Ends At')->dateTime()->sortable(),
-                TextColumn::make('created_at')->dateTime()->sortable(),
+                TextColumn::make('quantity')->label(__('admin.quantity')),
+                TextColumn::make('trial_ends_at')->label(__('admin.trial_ends'))->dateTime()->sortable(),
+                TextColumn::make('ends_at')->label(__('admin.ends_at'))->dateTime()->sortable(),
+                TextColumn::make('created_at')->label(__('admin.time'))->dateTime()->sortable(),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([]);

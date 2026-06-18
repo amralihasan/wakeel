@@ -51,23 +51,25 @@ class ConversationResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('company.name')
-                    ->label('Company')
+                    ->label(__('admin.company'))
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('customer_phone')
-                    ->label('Phone')
+                    ->label(__('admin.customer_phone'))
                     ->formatStateUsing(fn ($state) => strlen($state) > 6
                         ? substr($state, 0, 4).'***'.substr($state, -3)
                         : $state
                     )
                     ->searchable(),
                 TextColumn::make('mode')
+                    ->label(__('admin.mode'))
                     ->badge(),
                 TextColumn::make('last_message_at')
-                    ->label('Last Activity')
+                    ->label(__('admin.last_activity'))
                     ->dateTime()
                     ->sortable(),
                 TextColumn::make('created_at')
+                    ->label(__('admin.time'))
                     ->dateTime()
                     ->sortable(),
             ])

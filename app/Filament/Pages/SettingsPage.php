@@ -17,15 +17,25 @@ use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Artisan;
-use UnitEnum;
 
 class SettingsPage extends Page
 {
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-cog-6-tooth';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Settings';
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.settings');
+    }
 
-    protected static ?string $title = 'Platform Settings';
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.platform_settings');
+    }
+
+    public function getTitle(): string
+    {
+        return __('admin.platform_settings');
+    }
 
     public ?array $data = [];
 
@@ -54,66 +64,66 @@ class SettingsPage extends Page
             ->components([
                 Tabs::make('Settings')
                     ->tabs([
-                        Tab::make('Plan Defaults')
+                        Tab::make(__('admin.plan_defaults'))
                             ->icon('heroicon-o-currency-dollar')
                             ->schema([
                                 TextInput::make('default_plan')
-                                    ->label('Default Plan Key')
+                                    ->label(__('admin.default_plan'))
                                     ->helperText('e.g. starter, growth, enterprise')
                                     ->required(),
                                 TextInput::make('max_conversations_per_tenant')
-                                    ->label('Max Conversations per Tenant')
+                                    ->label(__('admin.max_conversations_per_tenant'))
                                     ->numeric()
                                     ->required(),
                                 TextInput::make('max_messages_per_conversation')
-                                    ->label('Max Messages per Conversation')
+                                    ->label(__('admin.max_messages_per_conversation'))
                                     ->numeric()
                                     ->required(),
                                 TextInput::make('billing_grace_days')
-                                    ->label('Billing Grace Days')
+                                    ->label(__('admin.billing_grace_days'))
                                     ->numeric()
                                     ->required(),
                             ]),
-                        Tab::make('AI Configuration')
+                        Tab::make(__('admin.ai_configuration'))
                             ->icon('heroicon-o-cpu-chip')
                             ->schema([
                                 TextInput::make('claude_model')
-                                    ->label('Claude Model Name')
+                                    ->label(__('admin.claude_model'))
                                     ->required(),
                                 TextInput::make('max_tokens_per_response')
-                                    ->label('Max Tokens per Response')
+                                    ->label(__('admin.max_tokens_per_response'))
                                     ->numeric()
                                     ->required(),
                                 TextInput::make('ai_cost_per_token_in')
-                                    ->label('AI Cost per Input Token ($)')
+                                    ->label(__('admin.ai_cost_per_token_in'))
                                     ->numeric()
                                     ->required()
                                     ->step(0.000001),
                                 TextInput::make('ai_cost_per_token_out')
-                                    ->label('AI Cost per Output Token ($)')
+                                    ->label(__('admin.ai_cost_per_token_out'))
                                     ->numeric()
                                     ->required()
                                     ->step(0.000001),
                                 TextInput::make('whatsapp_cost_per_message')
-                                    ->label('WhatsApp Cost per Message ($)')
+                                    ->label(__('admin.whatsapp_cost_per_message'))
                                     ->numeric()
                                     ->required()
                                     ->step(0.001),
                             ]),
-                        Tab::make('System')
+                        Tab::make(__('admin.system'))
                             ->icon('heroicon-o-shield-check')
                             ->schema([
                                 Toggle::make('maintenance_mode')
-                                    ->label('Maintenance Mode')
+                                    ->label(__('admin.maintenance_mode'))
                                     ->helperText('When enabled, site shows maintenance page'),
                                 Toggle::make('track_analytics')
-                                    ->label('Track Analytics')
+                                    ->label(__('admin.track_analytics'))
                                     ->helperText('Enable usage analytics collection'),
                                 Toggle::make('allow_registration')
-                                    ->label('Allow Registration')
+                                    ->label(__('admin.allow_registration'))
                                     ->helperText('Allow new company signups'),
                                 Select::make('default_locale')
-                                    ->label('Default Locale')
+                                    ->label(__('admin.default_locale'))
                                     ->options([
                                         'ar' => 'العربية',
                                         'en' => 'English',
@@ -135,7 +145,7 @@ class SettingsPage extends Page
                     ->footer([
                         Actions::make([
                             Action::make('save')
-                                ->label('Save Settings')
+                                ->label(__('admin.save_settings'))
                                 ->submit('save')
                                 ->keyBindings(['mod+s']),
                         ]),
@@ -160,7 +170,7 @@ class SettingsPage extends Page
         }
 
         Notification::make()
-            ->title('Settings saved successfully')
+            ->title(__('admin.settings_saved'))
             ->success()
             ->send();
     }

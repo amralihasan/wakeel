@@ -52,11 +52,19 @@ class AdminUserResource extends Resource
     {
         return $schema
             ->components([
-                Section::make('Admin User')
+                Section::make(__('admin.admin_user'))
                     ->schema([
-                        TextInput::make('name')->required()->maxLength(255),
-                        TextInput::make('email')->email()->required()->unique(ignoreRecord: true),
+                        TextInput::make('name')
+                            ->label(__('admin.name'))
+                            ->required()
+                            ->maxLength(255),
+                        TextInput::make('email')
+                            ->label(__('admin.email'))
+                            ->email()
+                            ->required()
+                            ->unique(ignoreRecord: true),
                         TextInput::make('password')
+                            ->label(__('admin.password'))
                             ->password()
                             ->required(fn ($livewire) => $livewire instanceof CreateRecord)
                             ->hidden(fn ($livewire) => $livewire instanceof EditRecord),
@@ -68,9 +76,17 @@ class AdminUserResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('name')->searchable()->sortable(),
-                TextColumn::make('email')->searchable()->sortable(),
-                TextColumn::make('created_at')->label('Created')->dateTime(),
+                TextColumn::make('name')
+                    ->label(__('admin.name'))
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('email')
+                    ->label(__('admin.email'))
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('created_at')
+                    ->label(__('admin.created_at'))
+                    ->dateTime(),
             ])
             ->filters([]);
     }

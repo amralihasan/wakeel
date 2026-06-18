@@ -190,4 +190,22 @@ return [
     'this_month' => 'هذا الشهر',
     'last_30_days' => 'آخر ٣٠ يوم',
     'last_90_days' => 'آخر ٩٠ يوم',
+
+    // Additional Keys
+    'password' => 'كلمة المرور',
+    'created_at' => 'تاريخ الإنشاء',
+    'resolution_notes' => 'ملاحظات الحل',
+    'settings_saved' => 'تم حفظ الإعدادات بنجاح.',
+    'suspensions_excluded' => 'باستثناء الحسابات الموقوفة',
+    'messages_sent_today' => 'الرسائل المرسلة اليوم',
+    'all_time' => 'إجمالي :count كل الأوقات',
+    'company' => 'شركة',
+    'usage_this_cycle' => 'الاستخدام في الدورة الحالية',
+    'est_cost' => 'التكلفة المقدرة',
+    'est_revenue' => 'العائد المقدر',
+    'assigned_number' => 'الرقم المعين',
+    'retired_status' => 'مستبعد',
+    'escalated_at' => 'تم التحويل في',
+    'lead_phone' => 'هاتف العميل المحتمل',
+    'ai_summary' => 'ملخص الذكاء الاصطناعي',
 ];

@@ -23,17 +23,17 @@ class ContactMessageResource extends Resource
 
     public static function getNavigationLabel(): string
     {
-        return 'Contact Messages';
+        return __('admin.contact_messages');
     }
 
     public static function getPluralModelLabel(): string
     {
-        return 'Contact Messages';
+        return __('admin.contact_messages');
     }
 
     public static function getModelLabel(): string
     {
-        return 'Contact Message';
+        return __('admin.contact_message');
     }
 
     public static function getNavigationGroup(): ?string
@@ -55,15 +55,15 @@ class ContactMessageResource extends Resource
     {
         return $schema
             ->components([
-                Section::make('Message')
+                Section::make(__('admin.message'))
                     ->schema([
-                        Text::make('name'),
-                        Text::make('email'),
-                        Text::make('phone'),
-                        Text::make('company'),
-                        Text::make('message'),
-                        Text::make('locale'),
-                        Text::make('created_at')->dateTime(),
+                        Text::make('name')->label(__('admin.name')),
+                        Text::make('email')->label(__('admin.email')),
+                        Text::make('phone')->label(__('admin.phone')),
+                        Text::make('company')->label(__('admin.company')),
+                        Text::make('message')->label(__('admin.message')),
+                        Text::make('locale')->label(__('admin.locale')),
+                        Text::make('created_at')->label(__('admin.time'))->dateTime(),
                     ]),
             ]);
     }
@@ -72,21 +72,21 @@ class ContactMessageResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('name')->searchable()->sortable(),
-                TextColumn::make('email')->searchable(),
+                TextColumn::make('name')->label(__('admin.name'))->searchable()->sortable(),
+                TextColumn::make('email')->label(__('admin.email'))->searchable(),
                 TextColumn::make('is_handled')
-                    ->label('Handled')
+                    ->label(__('admin.status'))
                     ->badge()
-                    ->state(fn ($record) => $record->is_handled ? 'Yes' : 'No')
+                    ->state(fn ($record) => $record->is_handled ? __('admin.yes') : __('admin.no'))
                     ->color(fn ($record) => $record->is_handled ? 'success' : 'warning'),
-                TextColumn::make('locale')->badge(),
-                TextColumn::make('created_at')->dateTime()->sortable(),
+                TextColumn::make('locale')->label(__('admin.locale'))->badge(),
+                TextColumn::make('created_at')->label(__('admin.time'))->dateTime()->sortable(),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([])
             ->recordActions([
                 Action::make('mark_handled')
-                    ->label('Mark Handled')
+                    ->label(__('admin.mark_handled'))
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->visible(fn (ContactMessage $record) => ! $record->is_handled)
@@ -96,7 +96,7 @@ class ContactMessageResource extends Resource
                         'handled_at' => now(),
                     ])),
                 Action::make('mark_unhandled')
-                    ->label('Reopen')
+                    ->label(__('admin.reopen'))
                     ->icon('heroicon-o-arrow-uturn-left')
                     ->color('warning')
                     ->visible(fn (ContactMessage $record) => $record->is_handled)

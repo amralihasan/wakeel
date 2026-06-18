@@ -18,11 +18,20 @@ class WhatsAppChannelsTable
     {
         return $table
             ->columns([
-                TextColumn::make('number')->searchable()->sortable(),
-                TextColumn::make('channel_id')->searchable(),
-                TextColumn::make('label')->searchable(),
+                TextColumn::make('number')
+                    ->label(__('admin.number'))
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('channel_id')
+                    ->label(__('admin.channel_id'))
+                    ->searchable(),
+                TextColumn::make('label')
+                    ->label(__('admin.label'))
+                    ->searchable(),
                 TextColumn::make('status')
+                    ->label(__('admin.status'))
                     ->badge()
+                    ->formatStateUsing(fn ($state) => __('admin.'.$state))
                     ->color(fn (string $state): string => match ($state) {
                         'available' => 'gray',
                         'assigned' => 'success',
@@ -30,13 +39,13 @@ class WhatsAppChannelsTable
                         'suspended' => 'warning',
                         default => 'gray',
                     }),
-                TextColumn::make('company.name')->label('Assigned To'),
+                TextColumn::make('company.name')->label(__('admin.assigned_company')),
                 TextColumn::make('last_inbound_at')
-                    ->label('Last Inbound')
+                    ->label(__('admin.last_inbound'))
                     ->dateTime()
                     ->sortable(),
                 TextColumn::make('webhook_ok')
-                    ->label('Webhook')
+                    ->label(__('admin.webhook'))
                     ->badge()
                     ->state(fn ($record) => $record->webhook_ok ? 'OK' : 'Error')
                     ->color(fn ($record) => $record->webhook_ok ? 'success' : 'danger'),
@@ -44,13 +53,13 @@ class WhatsAppChannelsTable
             ->filters([])
             ->recordActions([
                 Action::make('assign')
-                    ->label('Assign to Company')
+                    ->label(__('admin.assign'))
                     ->icon('heroicon-o-link')
                     ->color('primary')
                     ->visible(fn (WhatsAppChannel $record) => $record->status === 'available')
                     ->form([
                         Select::make('company_id')
-                            ->label('Company')
+                            ->label(__('admin.company'))
                             ->relationship('company', 'name')
                             ->required(),
                     ])
@@ -61,7 +70,7 @@ class WhatsAppChannelsTable
                         ]);
                     }),
                 Action::make('release')
-                    ->label('Release from Company')
+                    ->label(__('admin.release'))
                     ->icon('heroicon-o-link-slash')
                     ->color('danger')
                     ->requiresConfirmation()
@@ -73,14 +82,14 @@ class WhatsAppChannelsTable
                         ]);
                     }),
                 Action::make('retire')
-                    ->label('Retire')
+                    ->label(__('admin.retired_status'))
                     ->requiresConfirmation()
                     ->color('danger')
                     ->icon('heroicon-o-archive-box')
                     ->visible(fn (WhatsAppChannel $record): bool => $record->status !== 'retired')
                     ->action(fn (WhatsAppChannel $record) => $record->update(['status' => 'retired'])),
                 Action::make('make_available')
-                    ->label('Make Available')
+                    ->label(__('admin.make_available'))
                     ->requiresConfirmation()
                     ->color('success')
                     ->icon('heroicon-o-check-circle')
@@ -90,7 +99,7 @@ class WhatsAppChannelsTable
                         'assigned_company_id' => null,
                     ])),
                 Action::make('register_webhook')
-                    ->label('Re-register Webhook')
+                    ->label(__('admin.re_register_webhook'))
                     ->icon('heroicon-o-globe-alt')
                     ->color('info')
                     ->action(function (WhatsAppChannel $record) {

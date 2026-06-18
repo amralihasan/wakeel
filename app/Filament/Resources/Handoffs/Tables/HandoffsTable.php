@@ -15,19 +15,27 @@ class HandoffsTable
         return $table
             ->columns([
                 TextColumn::make('company.name')
-                    ->label('Company')
+                    ->label(__('admin.company'))
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('lead.customer_phone')
-                    ->label('Lead Phone')
+                    ->label(__('admin.lead_phone'))
                     ->searchable(),
                 TextColumn::make('reason')
+                    ->label(__('admin.reason'))
                     ->searchable(),
                 TextColumn::make('ai_summary')
-                    ->label('AI Summary')
+                    ->label(__('admin.ai_summary'))
                     ->limit(50),
                 TextColumn::make('status')
+                    ->label(__('admin.status'))
                     ->badge()
+                    ->formatStateUsing(fn ($state) => match ($state?->value ?? $state) {
+                        'waiting' => __('admin.pending'),
+                        'active' => __('admin.in_progress'),
+                        'resolved' => __('admin.resolved'),
+                        default => $state,
+                    })
                     ->color(fn ($state): string => match ($state?->value ?? $state) {
                         'waiting' => 'warning',
                         'active' => 'info',
@@ -35,7 +43,7 @@ class HandoffsTable
                         default => 'gray',
                     }),
                 TextColumn::make('created_at')
-                    ->label('Escalated At')
+                    ->label(__('admin.escalated_at'))
                     ->dateTime()
                     ->sortable(),
             ])

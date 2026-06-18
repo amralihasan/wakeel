@@ -190,4 +190,22 @@ return [
     'this_month' => 'This Month',
     'last_30_days' => 'Last 30 Days',
     'last_90_days' => 'Last 90 Days',
+
+    // Additional Keys
+    'password' => 'Password',
+    'created_at' => 'Created At',
+    'resolution_notes' => 'Resolution Notes',
+    'settings_saved' => 'Settings saved successfully.',
+    'suspensions_excluded' => 'Suspensions excluded',
+    'messages_sent_today' => 'Messages Sent Today',
+    'all_time' => ':count all-time',
+    'company' => 'Company',
+    'usage_this_cycle' => 'Usage This Cycle',
+    'est_cost' => 'Est. Cost',
+    'est_revenue' => 'Est. Revenue',
+    'assigned_number' => 'Assigned Number',
+    'retired_status' => 'Retired',
+    'escalated_at' => 'Escalated At',
+    'lead_phone' => 'Lead Phone',
+    'ai_summary' => 'AI Summary',
 ];

@@ -56,23 +56,25 @@ class AdminAuditLogResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('created_at')
-                    ->label('Time')
+                    ->label(__('admin.time'))
                     ->dateTime('Y-m-d H:i:s')
                     ->sortable(),
                 TextColumn::make('actor.name')
-                    ->label('Actor')
+                    ->label(__('admin.actor'))
                     ->searchable(),
                 TextColumn::make('action')
+                    ->label(__('admin.action'))
                     ->badge()
                     ->searchable(),
                 TextColumn::make('target_type')
-                    ->label('Target')
+                    ->label(__('admin.target'))
                     ->searchable(),
                 TextColumn::make('description')
+                    ->label(__('admin.description'))
                     ->limit(60)
                     ->searchable(),
                 TextColumn::make('ip')
-                    ->label('IP')
+                    ->label(__('admin.ip'))
                     ->searchable(),
             ])
             ->defaultSort('created_at', 'desc')
