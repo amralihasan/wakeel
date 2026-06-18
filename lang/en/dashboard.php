@@ -86,4 +86,5 @@ return [
     'formal_arabic' => 'Simplified Formal Arabic',
     'gulf_dialect' => 'Gulf Dialect',
     'activate_add_units' => 'Activate & Add Units',
+    'whatsapp_interested_message' => 'Interested',
 ];

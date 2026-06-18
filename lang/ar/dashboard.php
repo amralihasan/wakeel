@@ -86,4 +86,5 @@ return [
     'formal_arabic' => 'عربية فصحى مبسطة',
     'gulf_dialect' => 'لهجة خليجية ملائمة',
     'activate_add_units' => 'تفعيل وإضافة الوحدات',
+    'whatsapp_interested_message' => 'مهتم',
 ];

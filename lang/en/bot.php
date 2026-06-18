@@ -45,4 +45,5 @@ return [
     'friendly_egyptian' => 'Egyptian Arabic (Colloquial)',
     'formal_arabic' => 'Modern Standard Arabic (Formal)',
     'gulf_arabic' => 'Gulf Arabic',
+    'sandbox_lead_name' => 'Platform Demo',
 ];

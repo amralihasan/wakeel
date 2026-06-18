@@ -45,4 +45,5 @@ return [
     'friendly_egyptian' => 'عامية مصرية ودودة',
     'formal_arabic' => 'عربية فصحى مبسطة',
     'gulf_arabic' => 'لهجة خليجية ملائمة',
+    'sandbox_lead_name' => 'تجربة المنصة',
 ];

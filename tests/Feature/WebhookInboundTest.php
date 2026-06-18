@@ -6,6 +6,11 @@ use App\Models\Company;
 use App\Models\Message;
 use App\Services\WhatsApp\ConversationSession;
 use Illuminate\Support\Facades\Queue;
+use Prism\Prism\Enums\FinishReason;
+use Prism\Prism\Facades\Prism;
+use Prism\Prism\Text\Response;
+use Prism\Prism\ValueObjects\Meta;
+use Prism\Prism\ValueObjects\Usage;
 
 use function Pest\Laravel\assertDatabaseHas;
 
@@ -39,6 +44,20 @@ function validWebhookPayload(?string $channelId = null, ?string $from = null, ?s
 
 beforeEach(function () {
     config()->set('services.dialog360.verify_token', 'test-verify-token');
+
+    $fakeResponse = new Response(
+        steps: collect(),
+        text: 'مرحباً! كيف يمكنني مساعدتك اليوم؟',
+        finishReason: FinishReason::Stop,
+        toolCalls: [],
+        toolResults: [],
+        usage: new Usage(10, 20),
+        meta: new Meta('fake-id', 'fake-model'),
+        messages: collect(),
+        additionalContent: [],
+    );
+
+    Prism::fake([$fakeResponse]);
 });
 
 it('handles webhook verification handshake', function () {

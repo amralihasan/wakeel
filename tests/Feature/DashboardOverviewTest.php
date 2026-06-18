@@ -19,7 +19,7 @@ use function Pest\Laravel\get;
 
 it('displays the dashboard overview metrics and activities', function () {
     $company = Company::factory()->create(['onboarding_completed' => true]);
-    $owner = User::factory()->owner()->create(['company_id' => $company->id]);
+    $owner = User::factory()->owner()->create(['company_id' => $company->id, 'locale' => 'ar']);
     actingAs($owner);
 
     $unit = Unit::factory()->create(['company_id' => $company->id]);
@@ -99,6 +99,7 @@ it('displays the dashboard overview metrics and activities', function () {
     ]);
 
     // Test Volt Overview Component
+    app()->setLocale('ar');
     Livewire::test('pages::dashboard.overview')
         ->assertOk()
         ->assertSee('محادثات اليوم')
@@ -184,7 +185,7 @@ it('allows assigning reps and updating status outcomes on visits', function () {
 
 it('aggregates analytics data scoped to tenant', function () {
     $company = Company::factory()->create(['onboarding_completed' => true]);
-    $owner = User::factory()->owner()->create(['company_id' => $company->id]);
+    $owner = User::factory()->owner()->create(['company_id' => $company->id, 'locale' => 'ar']);
     actingAs($owner);
 
     // Seed leads with sources
@@ -193,6 +194,7 @@ it('aggregates analytics data scoped to tenant', function () {
     Lead::factory()->create(['company_id' => $company->id, 'source' => 'website', 'score' => 50]);
 
     // Test Analytics view aggregations
+    app()->setLocale('ar');
     Livewire::test('pages::dashboard.analytics')
         ->assertOk()
         ->assertSee('تقارير وتحليلات الأداء')

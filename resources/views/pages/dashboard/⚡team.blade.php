@@ -101,7 +101,7 @@ new #[Title('team.title')] class extends Component {
                         <p class="text-sm text-neutral-500">{{ $rep->email }}</p>
                     </div>
                     <div class="flex items-center gap-2">
-                        <flux:button size="xs" variant="danger" wire:click="delete({{ $rep->id }})" wire:confirm="{{ __('team.confirm_delete', ['name' => $rep->name]) }}">{{ __('units.delete_unit') }}</flux:button>
+                        <flux:button size="xs" variant="danger" wire:click="delete({{ $rep->id }})" wire:confirm="{{ __('team.confirm_delete', ['name' => $rep->name]) }}">{{ __('team.remove_member') }}</flux:button>
                     </div>
                 </div>
             @empty

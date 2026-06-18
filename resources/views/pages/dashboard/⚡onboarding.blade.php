@@ -63,7 +63,7 @@ new #[Title('dashboard.onboarding_title')] #[Layout('layouts.auth')] class exten
                 app(WhatsAppClientContract::class)->assignNumberFromPool($company);
                 $company->refresh();
                 $this->whatsappNumber = $company->whatsapp_number;
-                $this->waLink = "https://wa.me/{$this->whatsappNumber}?text=" . urlencode('مهتم');
+                $this->waLink = "https://wa.me/{$this->whatsappNumber}?text=" . urlencode(__('dashboard.whatsapp_interested_message'));
                 $this->qrCodeUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" . urlencode($this->waLink);
             } catch (\Throwable $e) {
                 // In local testing/mocking, assign a default number if pool is empty
@@ -72,7 +72,7 @@ new #[Title('dashboard.onboarding_title')] #[Layout('layouts.auth')] class exten
                     'dialog360_channel_id' => 'ch-' . uniqid(),
                     'whatsapp_number' => $this->whatsappNumber,
                 ]);
-                $this->waLink = "https://wa.me/{$this->whatsappNumber}?text=" . urlencode('مهتم');
+                $this->waLink = "https://wa.me/{$this->whatsappNumber}?text=" . urlencode(__('dashboard.whatsapp_interested_message'));
                 $this->qrCodeUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" . urlencode($this->waLink);
             }
 

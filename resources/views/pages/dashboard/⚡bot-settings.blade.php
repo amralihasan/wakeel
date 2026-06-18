@@ -55,7 +55,7 @@ new #[Title('bot.assistant_settings_title')] #[Layout('layouts.app')] class exte
         // Initialize sandbox conversation for testing
         $lead = Lead::firstOrCreate(
             ['company_id' => $this->companyId, 'customer_phone' => '+200000000000'],
-            ['name' => 'تجربة المنصة', 'status' => 'new', 'source' => 'other']
+            ['name' => __('bot.sandbox_lead_name'), 'status' => 'new', 'source' => 'other']
         );
 
         $conversation = Conversation::firstOrCreate(

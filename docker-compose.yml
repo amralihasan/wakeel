@@ -5,6 +5,14 @@ services:
       dockerfile: docker/php/Dockerfile
     volumes:
       - .:/var/www/html
+    environment:
+      DB_HOST: host.docker.internal
+      REDIS_HOST: redis
+      REVERB_HOST: reverb
+      AWS_ENDPOINT: http://minio:9000
+      VIEW_COMPILED_PATH: /var/www/html/storage/framework/views/docker
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - wakeel-network
 
@@ -20,24 +28,7 @@ services:
     networks:
       - wakeel-network
 
-  mysql:
-    image: mysql:8.0
-    ports:
-      - "3306:3306"
-    environment:
-      MYSQL_DATABASE: wakeel
-      MYSQL_USER: wakeel
-      MYSQL_PASSWORD: secret
-      MYSQL_ROOT_PASSWORD: root
-    volumes:
-      - mysql-data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - wakeel-network
+
 
   redis:
     image: redis:7-alpine
@@ -60,11 +51,17 @@ services:
     command: php artisan horizon
     volumes:
       - .:/var/www/html
+    environment:
+      DB_HOST: host.docker.internal
+      REDIS_HOST: redis
+      REVERB_HOST: reverb
+      AWS_ENDPOINT: http://minio:9000
+      VIEW_COMPILED_PATH: /var/www/html/storage/framework/views/docker
     depends_on:
-      mysql:
-        condition: service_healthy
       redis:
         condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - wakeel-network
 
@@ -75,11 +72,19 @@ services:
     command: php artisan reverb:start --host=0.0.0.0 --port=8081
     ports:
       - "8081:8081"
+    environment:
+      DB_HOST: host.docker.internal
+      REDIS_HOST: redis
+      REVERB_HOST: reverb
+      AWS_ENDPOINT: http://minio:9000
+      VIEW_COMPILED_PATH: /var/www/html/storage/framework/views/docker
     depends_on:
       redis:
         condition: service_healthy
     volumes:
       - .:/var/www/html
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - wakeel-network
 
@@ -90,11 +95,17 @@ services:
     command: php artisan schedule:work
     volumes:
       - .:/var/www/html
+    environment:
+      DB_HOST: host.docker.internal
+      REDIS_HOST: redis
+      REVERB_HOST: reverb
+      AWS_ENDPOINT: http://minio:9000
+      VIEW_COMPILED_PATH: /var/www/html/storage/framework/views/docker
     depends_on:
-      mysql:
-        condition: service_healthy
       redis:
         condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - wakeel-network
 
@@ -140,6 +151,5 @@ networks:
     driver: bridge
 
 volumes:
-  mysql-data:
   redis-data:
   minio-data:

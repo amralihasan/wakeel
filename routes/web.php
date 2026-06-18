@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Route;
 
-Route::view('/', 'welcome')->name('home');
+require __DIR__.'/marketing.php';
 
 Route::get('webhooks/whatsapp', [WhatsAppWebhookController::class, 'verify'])->name('webhooks.whatsapp');
 Route::post('webhooks/whatsapp', [WhatsAppWebhookController::class, 'handle'])
