@@ -20,12 +20,24 @@
                         {{ __('المحادثات') }}
                     </flux:sidebar.item>
 
+                    <flux:sidebar.item icon="users" :href="route('dashboard.leads')" :current="request()->routeIs('dashboard.leads*')" wire:navigate>
+                        {{ __('العملاء المهتمين') }}
+                    </flux:sidebar.item>
+
+                    <flux:sidebar.item icon="calendar-days" :href="route('dashboard.visits')" :current="request()->routeIs('dashboard.visits')" wire:navigate>
+                        {{ __('الزيارات') }}
+                    </flux:sidebar.item>
+
                     <flux:sidebar.item icon="building-office-2" :href="route('units.index')" :current="request()->routeIs('units.*')" wire:navigate>
                         {{ __('الوحدات العقارية') }}
                     </flux:sidebar.item>
 
                     <flux:sidebar.item icon="cog-6-tooth" :href="route('bot-settings.index')" :current="request()->routeIs('bot-settings.*')" wire:navigate>
                         {{ __('إعدادات البوت') }}
+                    </flux:sidebar.item>
+
+                    <flux:sidebar.item icon="chart-bar" :href="route('dashboard.analytics')" :current="request()->routeIs('dashboard.analytics')" wire:navigate>
+                        {{ __('التحليلات') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
             </flux:sidebar.nav>

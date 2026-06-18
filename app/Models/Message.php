@@ -34,6 +34,7 @@ class Message extends Model
         return [
             'direction' => MessageDirection::class,
             'sender' => MessageSender::class,
+            'created_at' => 'datetime',
         ];
     }
 

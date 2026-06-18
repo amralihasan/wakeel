@@ -13,6 +13,24 @@
                 <flux:navbar.item icon="layout-grid" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                     {{ __('Dashboard') }}
                 </flux:navbar.item>
+                <flux:navbar.item icon="chat-bubble-left-right" :href="route('dashboard.conversations')" :current="request()->routeIs('dashboard.conversations')" wire:navigate>
+                    {{ __('المحادثات') }}
+                </flux:navbar.item>
+                <flux:navbar.item icon="users" :href="route('dashboard.leads')" :current="request()->routeIs('dashboard.leads*')" wire:navigate>
+                    {{ __('العملاء المهتمين') }}
+                </flux:navbar.item>
+                <flux:navbar.item icon="calendar-days" :href="route('dashboard.visits')" :current="request()->routeIs('dashboard.visits')" wire:navigate>
+                    {{ __('الزيارات') }}
+                </flux:navbar.item>
+                <flux:navbar.item icon="building-office-2" :href="route('units.index')" :current="request()->routeIs('units.*')" wire:navigate>
+                    {{ __('الوحدات العقارية') }}
+                </flux:navbar.item>
+                <flux:navbar.item icon="cog-6-tooth" :href="route('bot-settings.index')" :current="request()->routeIs('bot-settings.*')" wire:navigate>
+                    {{ __('إعدادات البوت') }}
+                </flux:navbar.item>
+                <flux:navbar.item icon="chart-bar" :href="route('dashboard.analytics')" :current="request()->routeIs('dashboard.analytics')" wire:navigate>
+                    {{ __('التحليلات') }}
+                </flux:navbar.item>
             </flux:navbar>
 
             <flux:spacer />
@@ -55,6 +73,24 @@
                 <flux:sidebar.group :heading="__('Platform')">
                     <flux:sidebar.item icon="layout-grid" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard')  }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="chat-bubble-left-right" :href="route('dashboard.conversations')" :current="request()->routeIs('dashboard.conversations')" wire:navigate>
+                        {{ __('المحادثات') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="users" :href="route('dashboard.leads')" :current="request()->routeIs('dashboard.leads*')" wire:navigate>
+                        {{ __('العملاء المهتمين') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="calendar-days" :href="route('dashboard.visits')" :current="request()->routeIs('dashboard.visits')" wire:navigate>
+                        {{ __('الزيارات') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="building-office-2" :href="route('units.index')" :current="request()->routeIs('units.*')" wire:navigate>
+                        {{ __('الوحدات العقارية') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="cog-6-tooth" :href="route('bot-settings.index')" :current="request()->routeIs('bot-settings.*')" wire:navigate>
+                        {{ __('إعدادات البوت') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="chart-bar" :href="route('dashboard.analytics')" :current="request()->routeIs('dashboard.analytics')" wire:navigate>
+                        {{ __('التحليلات') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
             </flux:sidebar.nav>
