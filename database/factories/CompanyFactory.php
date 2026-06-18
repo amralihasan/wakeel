@@ -22,6 +22,7 @@ class CompanyFactory extends Factory
             'phone' => fake()->phoneNumber(),
             'plan' => 'starter',
             'is_active' => true,
+            'onboarding_completed' => true,
         ];
     }
 }

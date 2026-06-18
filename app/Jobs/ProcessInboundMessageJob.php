@@ -46,6 +46,11 @@ class ProcessInboundMessageJob implements ShouldQueue
                 return;
             }
 
+            $botSettings = $company->bot_settings ?? [];
+            if (! ($botSettings['active'] ?? true)) {
+                return;
+            }
+
             app(AgentRunner::class)->handle($company, $this->customerPhone, $this->body ?? '');
         });
     }

@@ -96,11 +96,13 @@ class AgentRunner
             $assistantText = 'معلش حصل خطأ بسيط، ممكن تعيد رسالتك؟';
         }
 
-        SendWhatsAppText::dispatch(
-            $company->dialog360_channel_id,
-            $customerPhone,
-            $assistantText,
-        );
+        if ($customerPhone !== '+200000000000') {
+            SendWhatsAppText::dispatch(
+                $company->dialog360_channel_id,
+                $customerPhone,
+                $assistantText,
+            );
+        }
 
         Message::create([
             'company_id' => $company->id,

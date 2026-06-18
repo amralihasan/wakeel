@@ -16,9 +16,14 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::view('dashboard', 'dashboard')->name('dashboard');
+    Route::livewire('onboarding', 'pages::dashboard.onboarding')->name('onboarding.index');
 
-    Route::livewire('dashboard/conversations', 'pages::dashboard.conversations')->name('dashboard.conversations');
+    Route::middleware('onboarded')->group(function () {
+        Route::view('dashboard', 'dashboard')->name('dashboard');
+        Route::livewire('dashboard/conversations', 'pages::dashboard.conversations')->name('dashboard.conversations');
+        Route::livewire('dashboard/units', 'pages::dashboard.units')->name('units.index');
+        Route::livewire('dashboard/bot-settings', 'pages::dashboard.bot-settings')->name('bot-settings.index');
+    });
 });
 
 require __DIR__.'/settings.php';

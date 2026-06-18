@@ -22,6 +22,7 @@ class Company extends Model
         'dialog360_channel_id',
         'bot_settings',
         'is_active',
+        'onboarding_completed',
     ];
 
     protected function casts(): array
@@ -29,6 +30,7 @@ class Company extends Model
         return [
             'bot_settings' => 'array',
             'is_active' => 'boolean',
+            'onboarding_completed' => 'boolean',
         ];
     }
 
