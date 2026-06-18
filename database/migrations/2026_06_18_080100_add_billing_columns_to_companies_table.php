@@ -12,9 +12,7 @@ return new class extends Migration
             $table->timestamp('billing_cycle_start')->nullable();
             $table->timestamp('billing_cycle_end')->nullable();
             $table->integer('conversations_count')->default(0);
-            $table->string('stripe_id')->nullable()->unique();
-            $table->string('pm_type')->nullable();
-            $table->string('pm_last_four', 4)->nullable();
+            $table->string('paymob_subscription_id')->nullable()->unique();
             $table->timestamp('trial_ends_at')->nullable();
         });
     }
@@ -26,9 +24,7 @@ return new class extends Migration
                 'billing_cycle_start',
                 'billing_cycle_end',
                 'conversations_count',
-                'stripe_id',
-                'pm_type',
-                'pm_last_four',
+                'paymob_subscription_id',
                 'trial_ends_at',
             ]);
         });

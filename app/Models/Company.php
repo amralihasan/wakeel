@@ -7,12 +7,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Config;
-use Laravel\Cashier\Billable;
 
 class Company extends Model
 {
     /** @use HasFactory<CompanyFactory> */
-    use Billable, HasFactory;
+    use HasFactory;
 
     protected $fillable = [
         'name',
@@ -29,6 +28,8 @@ class Company extends Model
         'billing_cycle_start',
         'billing_cycle_end',
         'conversations_count',
+        'paymob_subscription_id',
+        'trial_ends_at',
     ];
 
     protected function casts(): array
@@ -39,6 +40,7 @@ class Company extends Model
             'onboarding_completed' => 'boolean',
             'billing_cycle_start' => 'datetime',
             'billing_cycle_end' => 'datetime',
+            'trial_ends_at' => 'datetime',
         ];
     }
 
@@ -105,5 +107,10 @@ class Company extends Model
         $this->billing_cycle_end = $now->copy()->addMonth();
         $this->conversations_count = 0;
         $this->save();
+    }
+
+    public function hasPaymobSubscription(): bool
+    {
+        return filled($this->paymob_subscription_id);
     }
 }

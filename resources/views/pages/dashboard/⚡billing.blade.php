@@ -14,27 +14,48 @@ new #[Title('billing.title')] class extends Component {
         return Auth::user()->company;
     }
 
-    public function checkout(string $planName): void
+    public function checkout(string $planName, App\Services\PaymobService $paymob): void
     {
         $company = $this->company;
+        $plan = config("plans.{$planName}");
 
-        $priceId = config("plans.{$planName}.price_id");
+        if (! $plan) {
+            return;
+        }
 
-        $this->redirect(
-            $company->newSubscription('default', $priceId)
-                ->checkout([
-                    'success_url' => route('billing.index'),
-                    'cancel_url' => route('billing.index'),
-                ])
-                ->url
-        );
-    }
+        try {
+            $user = Auth::user();
+            $token = $paymob->getAuthToken();
+            
+            $merchantOrderId = "company_{$company->id}_plan_{$planName}_" . time();
+            
+            $paymobOrderId = $paymob->registerOrder(
+                $token,
+                $plan['amount'],
+                $merchantOrderId
+            );
 
-    public function manage(): void
-    {
-        $this->redirect(
-            Auth::user()->company->billingPortalUrl(route('billing.index'))
-        );
+            $nameParts = explode(' ', $user->name ?? 'User', 2);
+            $firstName = $nameParts[0] ?: 'User';
+            $lastName = $nameParts[1] ?? 'User';
+
+            $paymentKey = $paymob->getPaymentKey(
+                $token,
+                $paymobOrderId,
+                $plan['amount'],
+                [
+                    'email' => $company->email ?: $user->email,
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
+                    'phone_number' => $company->phone ?: '+201234567890',
+                ]
+            );
+
+            $this->redirect($paymob->getCheckoutUrl($paymentKey));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Paymob checkout failed', ['error' => $e->getMessage()]);
+            $this->js("alert('" . addslashes(__('billing.checkout_failed_error')) . "')");
+        }
     }
 }; ?>
 
@@ -56,8 +77,8 @@ new #[Title('billing.title')] class extends Component {
                 </p>
             </div>
             <div class="flex gap-2">
-                @if ($this->company->hasStripeId())
-                    <flux:button wire:click="manage" variant="primary">{{ __('billing.manage_subscription_btn') }}</flux:button>
+                @if ($this->company->hasPaymobSubscription())
+                    <span class="text-sm text-green-600 font-medium bg-green-50 px-3 py-1 rounded-full dark:bg-green-950 dark:text-green-400">{{ __('billing.current_plan') }}</span>
                 @else
                     <flux:button wire:click="checkout('growth')" variant="primary">{{ __('billing.upgrade_plan_btn') }}</flux:button>
                 @endif

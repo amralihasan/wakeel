@@ -35,4 +35,5 @@ return [
     'plan_starter' => 'البداية (Starter)',
     'plan_growth' => 'النمو (Growth)',
     'plan_enterprise' => 'الشركات (Enterprise)',
+    'checkout_failed_error' => 'فشلت عملية الدفع. يرجى المحاولة مرة أخرى لاحقاً.',
 ];

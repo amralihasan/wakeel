@@ -35,4 +35,5 @@ return [
     'plan_starter' => 'Starter Plan',
     'plan_growth' => 'Growth Plan',
     'plan_enterprise' => 'Enterprise Plan',
+    'checkout_failed_error' => 'Checkout failed. Please try again later.',
 ];

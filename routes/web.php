@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\PaymobWebhookController;
 use App\Http\Controllers\WhatsAppWebhookController;
 use App\Livewire\Auth\Register;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -13,6 +14,10 @@ Route::get('webhooks/whatsapp', [WhatsAppWebhookController::class, 'verify'])->n
 Route::post('webhooks/whatsapp', [WhatsAppWebhookController::class, 'handle'])
     ->middleware('throttle:120,1')
     ->withoutMiddleware([VerifyCsrfToken::class]);
+
+Route::post('webhooks/paymob', [PaymobWebhookController::class, 'handle'])
+    ->withoutMiddleware([VerifyCsrfToken::class])
+    ->name('webhooks.paymob');
 
 Route::middleware('guest')->group(function () {
     Route::get('register', Register::class)->name('register');

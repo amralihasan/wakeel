@@ -6,7 +6,6 @@ use App\Events\LeadBecameHot;
 use App\Events\VisitBooked;
 use App\Listeners\ApplyVisitSignal;
 use App\Listeners\EscalateHotLead;
-use App\Models\Company;
 use App\Services\Agent\SystemPromptBuilder;
 use App\Services\CurrentCompany;
 use Carbon\CarbonImmutable;
@@ -15,8 +14,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
-use Laravel\Cashier\Cashier;
-use Laravel\Cashier\Events\WebhookHandled;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -34,8 +31,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Cashier::useCustomerModel(Company::class);
-
         $this->configureDefaults();
         $this->registerEventListeners();
     }
@@ -73,21 +68,5 @@ class AppServiceProvider extends ServiceProvider
             LeadBecameHot::class,
             EscalateHotLead::class,
         );
-
-        Event::listen(WebhookHandled::class, function (WebhookHandled $event) {
-            $payload = $event->payload;
-
-            if ($payload['type'] === 'invoice.payment_succeeded') {
-                $stripeCustomerId = $payload['data']['object']['customer'] ?? null;
-
-                if ($stripeCustomerId) {
-                    $company = Company::where('stripe_id', $stripeCustomerId)->first();
-
-                    if ($company) {
-                        $company->rolloverBillingCycle();
-                    }
-                }
-            }
-        });
     }
 }

@@ -7,7 +7,7 @@ return [
         'numbers_limit' => 1,
         'units_limit' => 10,
         'reps_limit' => 1,
-        'price_id' => env('STRIPE_PRICE_STARTER', 'price_starter_test_id'),
+        'amount' => env('PLAN_STARTER_PRICE', 500.00), // in EGP
     ],
     'growth' => [
         'name' => 'Growth',
@@ -15,7 +15,7 @@ return [
         'numbers_limit' => 1,
         'units_limit' => -1,
         'reps_limit' => 3,
-        'price_id' => env('STRIPE_PRICE_GROWTH', 'price_growth_test_id'),
+        'amount' => env('PLAN_GROWTH_PRICE', 1500.00), // in EGP
     ],
     'enterprise' => [
         'name' => 'Enterprise',
@@ -23,6 +23,6 @@ return [
         'numbers_limit' => 2,
         'units_limit' => -1,
         'reps_limit' => -1,
-        'price_id' => env('STRIPE_PRICE_ENTERPRISE', 'price_enterprise_test_id'),
+        'amount' => env('PLAN_ENTERPRISE_PRICE', 5000.00), // in EGP
     ],
 ];
