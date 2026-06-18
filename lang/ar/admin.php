@@ -1,9 +1,13 @@
 <?php
 
 return [
+    // Navigation Groups
+    'platform_management' => 'إدارة المنصة',
+    'system_monitoring' => 'مراقبة النظام',
+    'settings' => 'الإعدادات',
+
+    // Companies
     'companies' => 'الشركات المشتركة',
-    'whatsapp_channels' => 'مجمع أرقام واتساب',
-    'handoffs' => 'عمليات التحويل لبشري',
     'company_name' => 'اسم الشركة',
     'status' => 'الحالة',
     'plan' => 'الخطة',
@@ -15,17 +19,175 @@ return [
     'revenue' => 'العائدات المقدرة',
     'costs' => 'التكاليف المقدرة',
     'margin' => 'هامش الربح',
+    'company_health' => 'صحة الفواتير',
+    'healthy' => 'سليم',
+    'past_due' => 'متأخر',
+    'over_limit' => 'تجاوز الحد',
+
+    // WhatsApp Channels
+    'whatsapp_channels' => 'قنوات واتساب',
     'number' => 'رقم الهاتف',
     'channel_id' => 'معرف القناة',
+    'label' => 'التسمية',
     'assigned_company' => 'الشركة المعينة',
     'available' => 'متاح',
-    'assigned' => 'معين لشركة',
+    'assigned' => 'معين',
     'retired' => 'مستبعد',
+    'last_inbound' => 'آخر وارد',
+    'webhook' => 'Webhook',
+    'assign' => 'تعيين لشركة',
+    'release' => 'إلغاء التعيين',
+    're_register_webhook' => 'إعادة تسجيل Webhook',
+    'make_available' => 'جعله متاحاً',
+
+    // Subscriptions
+    'subscriptions' => 'الاشتراكات',
+    'subscription' => 'اشتراك',
+    'plan_name' => 'اسم الخطة',
+    'stripe_status' => 'حالة الدفع',
+    'quantity' => 'الكمية',
+    'trial_ends' => 'انتهاء الفترة التجريبية',
+    'ends_at' => 'تاريخ الانتهاء',
+
+    // Handoffs
+    'handoffs' => 'عمليات التحويل لبشري',
+    'handoff' => 'تحويل محادثة',
     'reason' => 'السبب',
     'summary' => 'ملخص المحادثة',
     'resolved' => 'محلول / منتهي',
-    'company' => 'الشركة',
+    'conversation' => 'محادثة',
     'whatsapp_channel' => 'قناة واتساب',
-    'handoff' => 'تحويل محادثة',
-    'platform_management' => 'إدارة المنصة',
+    'handoff_reason' => 'سبب التحويل',
+    'handoff_status' => 'حالة التحويل',
+    'pending' => 'قيد الانتظار',
+    'in_progress' => 'قيد المعالجة',
+    'completed' => 'مكتمل',
+
+    // Conversations
+    'conversations' => 'المحادثات',
+    'customer_phone' => 'هاتف العميل',
+    'mode' => 'الوضع',
+    'bot' => 'بوت',
+    'human' => 'بشري',
+    'last_activity' => 'آخر نشاط',
+    'message_count' => 'عدد الرسائل',
+
+    // Leads
+    'leads' => 'العملاء المحتملون',
+    'lead' => 'عميل محتمل',
+    'customer_name' => 'الاسم',
+    'source' => 'المصدر',
+    'lead_status' => 'حالة العميل',
+    'new' => 'جديد',
+    'contacted' => 'تم التواصل',
+    'qualified' => 'مؤهل',
+    'lost' => 'خاسر',
+
+    // Contact Messages
+    'contact_messages' => 'رسائل التواصل',
+    'contact_message' => 'رسالة تواصل',
+    'name' => 'الاسم',
+    'email' => 'البريد الإلكتروني',
+    'phone' => 'رقم الهاتف',
+    'message' => 'الرسالة',
+    'is_handled' => 'تمت المعالجة',
+    'handled' => 'تمت المعالجة',
+    'not_handled' => 'لم تتم المعالجة بعد',
+    'handled_by' => 'تمت بواسطة',
+    'assigned_to' => 'مسند إلى',
+    'mark_handled' => 'تأكيد المعالجة',
+    'reopen' => 'إعادة الفتح',
+    'reply' => 'رد',
+    'locale' => 'اللغة',
+
+    // Admin Users
+    'admin_users' => 'مشرفي المنصة',
+    'admin_user' => 'مشرف',
+
+    // Audit Log
+    'audit_log' => 'سجل التدقيق',
+    'time' => 'الوقت',
+    'actor' => 'المستخدم',
+    'action' => 'الإجراء',
+    'target' => 'الهدف',
+    'ip' => 'IP',
+    'description' => 'الوصف',
+
+    // Dashboard
+    'total_companies' => 'إجمالي الشركات',
+    'active_subscriptions' => 'الاشتراكات النشطة',
+    'estimated_mrr' => 'العائد الشهري المقدر',
+    'conversations_today' => 'المحادثات اليوم',
+    'hot_leads' => 'العملاء المحتملون الساخنون',
+    'numbers_available' => 'الأرقام المتاحة',
+    'registered_tenants' => 'الشركات المسجلة',
+    'recurring_monthly_revenue' => 'العائد الشهري المتكرر',
+    'started_today' => 'بدأت اليوم',
+    'new_signups' => 'الاشتراكات الجديدة',
+    'top_tenants_by_revenue' => 'أفضل الشركات من حيث العائد',
+    'top_tenants_by_usage' => 'أفضل الشركات من حيث الاستخدام',
+
+    // Settings
+    'platform_settings' => 'إعدادات المنصة',
+    'save_settings' => 'حفظ الإعدادات',
+    'plan_defaults' => 'الخطط الافتراضية',
+    'ai_configuration' => 'إعدادات الذكاء الاصطناعي',
+    'system' => 'النظام',
+    'default_plan' => 'الخطة الافتراضية',
+    'maintenance_mode' => 'وضع الصيانة',
+    'track_analytics' => 'تتبع التحليلات',
+    'allow_registration' => 'السماح بالتسجيل',
+    'default_locale' => 'اللغة الافتراضية',
+    'billing_grace_days' => 'أيام السماح للفواتير',
+    'max_conversations_per_tenant' => 'الحد الأقصى للمحادثات لكل شركة',
+    'max_messages_per_conversation' => 'الحد الأقصى للرسائل لكل محادثة',
+    'claude_model' => 'نموذج Claude',
+    'max_tokens_per_response' => 'الحد الأقصى للتوكنز لكل رد',
+    'whatsapp_cost_per_message' => 'تكلفة رسالة واتساب',
+    'ai_cost_per_token_in' => 'تكلفة التوكن المدخل',
+    'ai_cost_per_token_out' => 'تكلفة التوكن المخرج',
+
+    // System Health
+    'system_health' => 'صحة النظام',
+    'failed_jobs' => 'المهام الفاشلة',
+    'retry_failed_jobs' => 'إعادة المحاولة',
+    'maintenance' => 'الصيانة',
+    'enable_maintenance' => 'تفعيل وضع الصيانة',
+    'disable_maintenance' => 'تعطيل وضع الصيانة',
+    'error_log' => 'سجل الأخطاء',
+    'no_errors' => 'لا توجد أخطاء',
+
+    // Common Actions
+    'view' => 'عرض',
+    'edit' => 'تعديل',
+    'delete' => 'حذف',
+    'create' => 'إنشاء',
+    'save' => 'حفظ',
+    'cancel' => 'إلغاء',
+    'confirm' => 'تأكيد',
+    'search' => 'بحث',
+    'filter' => 'تصفية',
+    'export' => 'تصدير',
+    'import' => 'استيراد',
+    'yes' => 'نعم',
+    'no' => 'لا',
+
+    // Plans
+    'starter' => 'ستارتر',
+    'growth' => 'نمو',
+    'enterprise' => 'مؤسسات',
+
+    // General
+    'total' => 'المجموع',
+    'count' => 'العدد',
+    'percentage' => 'النسبة المئوية',
+    'all' => 'الكل',
+    'none' => 'لا شيء',
+
+    // Time Periods
+    'today' => 'اليوم',
+    'this_week' => 'هذا الأسبوع',
+    'this_month' => 'هذا الشهر',
+    'last_30_days' => 'آخر ٣٠ يوم',
+    'last_90_days' => 'آخر ٩٠ يوم',
 ];

@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Models\Company;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
 {
@@ -25,7 +26,19 @@ class UserSeeder extends Seeder
             ]);
         }
 
-        // 1. Create main test user (Owner of the main company) if they don't exist
+        // 1. Create a default super admin user if they don't exist
+        $superAdmin = User::where('email', 'admin@example.com')->first();
+        if (! $superAdmin) {
+            User::create([
+                'name' => 'Super Admin',
+                'email' => 'admin@example.com',
+                'password' => Hash::make('password'),
+                'is_super_admin' => true,
+                'company_id' => null,
+            ]);
+        }
+
+        // 2. Create main test user (Owner of the main company) if they don't exist
         $testUser = User::where('email', 'test@example.com')->first();
         if (! $testUser) {
             User::factory()->owner()->create([

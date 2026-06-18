@@ -25,7 +25,7 @@ class AdminUserResource extends Resource
 
     public static function getNavigationGroup(): ?string
     {
-        return 'Platform Management';
+        return __('admin.platform_management');
     }
 
     public static function getNavigationLabel(): string

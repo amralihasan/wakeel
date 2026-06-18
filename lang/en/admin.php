@@ -1,9 +1,13 @@
 <?php
 
 return [
+    // Navigation Groups
+    'platform_management' => 'Platform Management',
+    'system_monitoring' => 'System Monitoring',
+    'settings' => 'Settings',
+
+    // Companies
     'companies' => 'Registered Companies',
-    'whatsapp_channels' => 'WhatsApp Number Pool',
-    'handoffs' => 'Human Escalation Claims',
     'company_name' => 'Company Name',
     'status' => 'Status',
     'plan' => 'Plan',
@@ -15,17 +19,175 @@ return [
     'revenue' => 'Estimated Revenue',
     'costs' => 'Estimated Costs',
     'margin' => 'Profit Margin',
+    'company_health' => 'Billing Health',
+    'healthy' => 'Healthy',
+    'past_due' => 'Past Due',
+    'over_limit' => 'Over Limit',
+
+    // WhatsApp Channels
+    'whatsapp_channels' => 'WhatsApp Number Pool',
     'number' => 'Phone Number',
     'channel_id' => 'Channel ID',
+    'label' => 'Label',
     'assigned_company' => 'Assigned Company',
     'available' => 'Available',
     'assigned' => 'Assigned to Company',
     'retired' => 'Retired',
+    'last_inbound' => 'Last Inbound',
+    'webhook' => 'Webhook',
+    'assign' => 'Assign to Company',
+    'release' => 'Release from Company',
+    're_register_webhook' => 'Re-register Webhook',
+    'make_available' => 'Make Available',
+
+    // Subscriptions
+    'subscriptions' => 'Subscriptions',
+    'subscription' => 'Subscription',
+    'plan_name' => 'Plan Name',
+    'stripe_status' => 'Payment Status',
+    'quantity' => 'Quantity',
+    'trial_ends' => 'Trial Ends',
+    'ends_at' => 'Ends At',
+
+    // Handoffs
+    'handoffs' => 'Human Escalation Claims',
+    'handoff' => 'Handoff',
     'reason' => 'Reason',
     'summary' => 'Conversation Summary',
     'resolved' => 'Resolved',
-    'company' => 'Company',
+    'conversation' => 'Conversation',
     'whatsapp_channel' => 'WhatsApp Channel',
-    'handoff' => 'Handoff',
-    'platform_management' => 'Platform Management',
+    'handoff_reason' => 'Handoff Reason',
+    'handoff_status' => 'Handoff Status',
+    'pending' => 'Pending',
+    'in_progress' => 'In Progress',
+    'completed' => 'Completed',
+
+    // Conversations
+    'conversations' => 'Conversations',
+    'customer_phone' => 'Customer Phone',
+    'mode' => 'Mode',
+    'bot' => 'Bot',
+    'human' => 'Human',
+    'last_activity' => 'Last Activity',
+    'message_count' => 'Message Count',
+
+    // Leads
+    'leads' => 'Leads',
+    'lead' => 'Lead',
+    'customer_name' => 'Name',
+    'source' => 'Source',
+    'lead_status' => 'Lead Status',
+    'new' => 'New',
+    'contacted' => 'Contacted',
+    'qualified' => 'Qualified',
+    'lost' => 'Lost',
+
+    // Contact Messages
+    'contact_messages' => 'Contact Messages',
+    'contact_message' => 'Contact Message',
+    'name' => 'Name',
+    'email' => 'Email',
+    'phone' => 'Phone',
+    'message' => 'Message',
+    'is_handled' => 'Handled',
+    'handled' => 'Handled',
+    'not_handled' => 'Not Handled',
+    'handled_by' => 'Handled By',
+    'assigned_to' => 'Assigned To',
+    'mark_handled' => 'Mark Handled',
+    'reopen' => 'Reopen',
+    'reply' => 'Reply',
+    'locale' => 'Locale',
+
+    // Admin Users
+    'admin_users' => 'Admin Users',
+    'admin_user' => 'Admin User',
+
+    // Audit Log
+    'audit_log' => 'Audit Log',
+    'time' => 'Time',
+    'actor' => 'Actor',
+    'action' => 'Action',
+    'target' => 'Target',
+    'ip' => 'IP',
+    'description' => 'Description',
+
+    // Dashboard
+    'total_companies' => 'Total Companies',
+    'active_subscriptions' => 'Active Subscriptions',
+    'estimated_mrr' => 'Estimated MRR',
+    'conversations_today' => 'Conversations Today',
+    'hot_leads' => 'Hot Leads',
+    'numbers_available' => 'Numbers Available',
+    'registered_tenants' => 'Registered tenants',
+    'recurring_monthly_revenue' => 'Recurring monthly revenue',
+    'started_today' => 'Started today',
+    'new_signups' => 'New Signups',
+    'top_tenants_by_revenue' => 'Top Tenants by Revenue',
+    'top_tenants_by_usage' => 'Top Tenants by Usage',
+
+    // Settings
+    'platform_settings' => 'Platform Settings',
+    'save_settings' => 'Save Settings',
+    'plan_defaults' => 'Plan Defaults',
+    'ai_configuration' => 'AI Configuration',
+    'system' => 'System',
+    'default_plan' => 'Default Plan',
+    'maintenance_mode' => 'Maintenance Mode',
+    'track_analytics' => 'Track Analytics',
+    'allow_registration' => 'Allow Registration',
+    'default_locale' => 'Default Locale',
+    'billing_grace_days' => 'Billing Grace Days',
+    'max_conversations_per_tenant' => 'Max Conversations per Tenant',
+    'max_messages_per_conversation' => 'Max Messages per Conversation',
+    'claude_model' => 'Claude Model',
+    'max_tokens_per_response' => 'Max Tokens per Response',
+    'whatsapp_cost_per_message' => 'WhatsApp Cost per Message',
+    'ai_cost_per_token_in' => 'AI Cost per Token (Input)',
+    'ai_cost_per_token_out' => 'AI Cost per Token (Output)',
+
+    // System Health
+    'system_health' => 'System Health',
+    'failed_jobs' => 'Failed Jobs',
+    'retry_failed_jobs' => 'Retry Failed Jobs',
+    'maintenance' => 'Maintenance',
+    'enable_maintenance' => 'Enable Maintenance',
+    'disable_maintenance' => 'Disable Maintenance',
+    'error_log' => 'Error Log',
+    'no_errors' => 'No Errors',
+
+    // Common Actions
+    'view' => 'View',
+    'edit' => 'Edit',
+    'delete' => 'Delete',
+    'create' => 'Create',
+    'save' => 'Save',
+    'cancel' => 'Cancel',
+    'confirm' => 'Confirm',
+    'search' => 'Search',
+    'filter' => 'Filter',
+    'export' => 'Export',
+    'import' => 'Import',
+    'yes' => 'Yes',
+    'no' => 'No',
+
+    // Plans
+    'starter' => 'Starter',
+    'growth' => 'Growth',
+    'enterprise' => 'Enterprise',
+
+    // General
+    'total' => 'Total',
+    'count' => 'Count',
+    'percentage' => 'Percentage',
+    'all' => 'All',
+    'none' => 'None',
+
+    // Time Periods
+    'today' => 'Today',
+    'this_week' => 'This Week',
+    'this_month' => 'This Month',
+    'last_30_days' => 'Last 30 Days',
+    'last_90_days' => 'Last 90 Days',
 ];

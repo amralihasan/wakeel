@@ -23,6 +23,11 @@ class CompanyResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-building-office-2';
 
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.platform_management');
+    }
+
     public static function getNavigationLabel(): string
     {
         return __('admin.companies');
