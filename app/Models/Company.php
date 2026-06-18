@@ -54,6 +54,11 @@ class Company extends Model
         return $this->hasMany(Unit::class);
     }
 
+    public function conversations(): HasMany
+    {
+        return $this->hasMany(Conversation::class);
+    }
+
     public function getPlanDetails(): array
     {
         $plans = Config::get('plans');

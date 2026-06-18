@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Laravel\Fortify\Contracts\PasskeyUser;
 use Laravel\Fortify\PasskeyAuthenticatable;
@@ -55,7 +56,19 @@ class User extends Authenticatable implements FilamentUser, PasskeyUser
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return $this->is_super_admin && is_null($this->company_id);
+        $allowed = $this->is_super_admin && is_null($this->company_id);
+
+        if (! $allowed) {
+            Log::warning('Filament admin access rejected', [
+                'user_id' => $this->id,
+                'email' => $this->email,
+                'is_super_admin' => $this->is_super_admin,
+                'company_id' => $this->company_id,
+                'ip' => request()->ip(),
+            ]);
+        }
+
+        return $allowed;
     }
 
     public function initials(): string

@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Companies\Tables;
 
-use App\Enums\UserRole;
+use App\Models\AdminAuditLog;
 use App\Models\Company;
 use App\Models\Message;
 use Filament\Actions\Action;
@@ -11,6 +11,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
 
@@ -107,31 +108,77 @@ class CompaniesTable
                     ->color(fn (string $state): string => str_contains($state, '-') ? 'danger' : 'success'),
             ])
             ->filters([
-                //
+                SelectFilter::make('plan')
+                    ->options([
+                        'starter' => 'Starter',
+                        'growth' => 'Growth',
+                        'enterprise' => 'Enterprise',
+                    ]),
+                SelectFilter::make('is_active')
+                    ->label('Status')
+                    ->options([
+                        '1' => 'Active',
+                        '0' => 'Suspended',
+                    ]),
             ])
             ->recordActions([
+                Action::make('view')
+                    ->label('View')
+                    ->icon('heroicon-o-eye')
+                    ->url(fn (Company $record) => "/admin/companies/{$record->id}"),
                 Action::make('suspend')
                     ->label('Suspend')
                     ->requiresConfirmation()
                     ->color('danger')
                     ->icon('heroicon-o-x-circle')
                     ->visible(fn (Company $record): bool => (bool) $record->is_active)
-                    ->action(fn (Company $record) => $record->update(['is_active' => false])),
+                    ->action(function (Company $record) {
+                        $record->update(['is_active' => false]);
+                        AdminAuditLog::record(
+                            auth()->user(),
+                            'company_suspended',
+                            'company',
+                            $record->id,
+                            "Suspended company {$record->name}",
+                            ['is_active' => true],
+                            ['is_active' => false],
+                        );
+                    }),
                 Action::make('reactivate')
                     ->label('Reactivate')
                     ->requiresConfirmation()
                     ->color('success')
                     ->icon('heroicon-o-check-circle')
                     ->visible(fn (Company $record): bool => ! (bool) $record->is_active)
-                    ->action(fn (Company $record) => $record->update(['is_active' => true])),
+                    ->action(function (Company $record) {
+                        $record->update(['is_active' => true]);
+                        AdminAuditLog::record(
+                            auth()->user(),
+                            'company_reactivated',
+                            'company',
+                            $record->id,
+                            "Reactivated company {$record->name}",
+                            ['is_active' => false],
+                            ['is_active' => true],
+                        );
+                    }),
                 Action::make('impersonate')
                     ->label('Impersonate')
                     ->icon('heroicon-o-user')
                     ->color('warning')
+                    ->requiresConfirmation()
                     ->action(function (Company $record) {
-                        $owner = $record->users()->where('role', UserRole::Owner)->first();
+                        $owner = $record->users()->where('role', 'owner')->first();
                         if ($owner) {
+                            AdminAuditLog::record(
+                                auth()->user(),
+                                'impersonation_started',
+                                'company',
+                                $record->id,
+                                "Impersonated company {$record->name} owner",
+                            );
                             Auth::login($owner);
+                            session()->put('impersonating', true);
 
                             return redirect()->to(route('dashboard'));
                         }

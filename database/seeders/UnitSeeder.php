@@ -53,6 +53,11 @@ class UnitSeeder extends Seeder
         ];
 
         foreach ($companies as $company) {
+            // Check if this company already has units
+            if ($company->units()->exists()) {
+                continue;
+            }
+
             foreach ($types as $type => $units) {
                 foreach ($units as $unitData) {
                     Unit::create(array_merge($unitData, [

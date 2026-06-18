@@ -5,6 +5,10 @@ namespace App\Filament\Resources\Companies;
 use App\Filament\Resources\Companies\Pages\CreateCompany;
 use App\Filament\Resources\Companies\Pages\EditCompany;
 use App\Filament\Resources\Companies\Pages\ListCompanies;
+use App\Filament\Resources\Companies\Pages\ViewCompany;
+use App\Filament\Resources\Companies\RelationManagers\ConversationsRelationManager;
+use App\Filament\Resources\Companies\RelationManagers\UnitsRelationManager;
+use App\Filament\Resources\Companies\RelationManagers\UsersRelationManager;
 use App\Filament\Resources\Companies\Schemas\CompanyForm;
 use App\Filament\Resources\Companies\Tables\CompaniesTable;
 use App\Models\Company;
@@ -52,7 +56,9 @@ class CompanyResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            UsersRelationManager::class,
+            UnitsRelationManager::class,
+            ConversationsRelationManager::class,
         ];
     }
 
@@ -61,6 +67,7 @@ class CompanyResource extends Resource
         return [
             'index' => ListCompanies::route('/'),
             'create' => CreateCompany::route('/create'),
+            'view' => ViewCompany::route('/{record}'),
             'edit' => EditCompany::route('/{record}/edit'),
         ];
     }
