@@ -160,4 +160,107 @@ class AgentRunner
             app(LeadScoringService::class)->applySignals($lead, $signals);
         }
     }
+
+    public function generateFollowUp(Company $company, string $customerPhone): string
+    {
+        $lock = Cache::lock("agent_runner:{$company->id}:{$customerPhone}", 30);
+
+        if (! $lock->get()) {
+            Log::warning('AgentRunner lock not acquired for follow-up', [
+                'company_id' => $company->id,
+                'customer_phone' => $customerPhone,
+            ]);
+
+            return '';
+        }
+
+        try {
+            return $this->executeFollowUp($company, $customerPhone);
+        } finally {
+            $lock->release();
+        }
+    }
+
+    protected function executeFollowUp(Company $company, string $customerPhone): string
+    {
+        $lead = Lead::where('company_id', $company->id)
+            ->where('customer_phone', $customerPhone)
+            ->first();
+
+        if (! $lead) {
+            return '';
+        }
+
+        $conversation = Conversation::where('company_id', $company->id)
+            ->where('customer_phone', $customerPhone)
+            ->first();
+
+        if (! $conversation) {
+            return '';
+        }
+
+        $systemPrompt = app(SystemPromptBuilder::class)->build($company, $lead);
+
+        $session = app(ConversationSession::class);
+        $session->setCompany($company);
+        $session->setPhone($customerPhone);
+
+        $history = $session->history();
+        $messages = [];
+
+        foreach ($history as $turn) {
+            $role = $turn['role'] ?? 'user';
+            $content = $turn['content'] ?? '';
+
+            $messages[] = $role === 'assistant'
+                ? new AssistantMessage($content)
+                : new UserMessage($content);
+        }
+
+        $followUpInstruction = 'العميل لم يقم بالرد منذ 23 ساعة بعد آخر رسالة منا. اكتب رسالة متابعة قصيرة، ودودة ومخصصة بناءً على اهتماماته وسياق المحادثة لإعادة تنشيط الحوار. لا تستخدم أي أدوات ولا تقم بإنشاء روابط أو تخمين تفاصيل غير موجودة.';
+
+        $messages[] = new UserMessage($followUpInstruction);
+
+        try {
+            $response = Prism::text()
+                ->using(config('prism.default_provider'), config('prism.default_model'))
+                ->withSystemPrompt($systemPrompt)
+                ->withMessages($messages)
+                ->withMaxSteps(3)
+                ->asText();
+
+            $assistantText = $response->text;
+        } catch (\Throwable $e) {
+            Log::error('AgentRunner Prism follow-up error', [
+                'company_id' => $company->id,
+                'customer_phone' => $customerPhone,
+                'error' => $e->getMessage(),
+            ]);
+
+            $assistantText = 'مرحباً، حابين نتطمن لو لسه مهتم بعروضنا العقارية؟ لو عندك أي استفسار أنا هنا للمساعدة.';
+        }
+
+        if ($customerPhone !== '+200000000000') {
+            SendWhatsAppText::dispatch(
+                $company->dialog360_channel_id,
+                $customerPhone,
+                $assistantText,
+            );
+        }
+
+        Message::create([
+            'company_id' => $company->id,
+            'conversation_id' => $conversation->id,
+            'direction' => MessageDirection::Outbound,
+            'sender' => MessageSender::Bot,
+            'body' => $assistantText,
+        ]);
+
+        $session->pushTurn(['role' => 'assistant', 'content' => $assistantText]);
+
+        $conversation->touch();
+        $session->touch();
+
+        return $assistantText;
+    }
 }

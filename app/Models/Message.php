@@ -42,4 +42,13 @@ class Message extends Model
     {
         return $this->belongsTo(Conversation::class);
     }
+
+    protected static function booted(): void
+    {
+        static::created(function (Message $message) {
+            $message->conversation()->update([
+                'last_message_at' => $message->created_at ?? now(),
+            ]);
+        });
+    }
 }

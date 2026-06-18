@@ -112,6 +112,20 @@ class Dialog360Client implements WhatsAppClientContract
         ]);
     }
 
+    public function sendTemplate(string $channelId, string $to, string $templateName, string $languageCode, array $components = []): string
+    {
+        return $this->post($channelId, [
+            'messaging_product' => 'whatsapp',
+            'to' => $to,
+            'type' => 'template',
+            'template' => [
+                'name' => $templateName,
+                'language' => ['code' => $languageCode],
+                'components' => $components,
+            ],
+        ]);
+    }
+
     public function assignNumberFromPool(Company $company): void
     {
         $pool = config('services.dialog360.channel_pool', []);

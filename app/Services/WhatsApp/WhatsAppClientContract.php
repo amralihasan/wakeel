@@ -18,5 +18,7 @@ interface WhatsAppClientContract
 
     public function sendLocation(string $channelId, string $to, float $lat, float $lng, ?string $name = null): string;
 
+    public function sendTemplate(string $channelId, string $to, string $templateName, string $languageCode, array $components = []): string;
+
     public function assignNumberFromPool(Company $company): void;
 }

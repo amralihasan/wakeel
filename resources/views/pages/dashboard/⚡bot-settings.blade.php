@@ -27,6 +27,10 @@ new #[Title('إعدادات البوت')] #[Layout('layouts.app')] class extends
 
     public int $unproductiveMessages = 5;
 
+    public bool $followUpsEnabled = true;
+
+    public int $maxFollowUps = 3;
+
     public string $testMessage = '';
 
     public int $companyId;
@@ -45,6 +49,8 @@ new #[Title('إعدادات البوت')] #[Layout('layouts.app')] class extends
         $this->active = $settings['active'] ?? true;
         $this->scoreThreshold = $settings['escalation_rules']['score_threshold'] ?? 70;
         $this->unproductiveMessages = $settings['escalation_rules']['unproductive_messages'] ?? 5;
+        $this->followUpsEnabled = $settings['follow_ups_enabled'] ?? true;
+        $this->maxFollowUps = $settings['max_follow_ups'] ?? 3;
 
         // Initialize sandbox conversation for testing
         $lead = Lead::firstOrCreate(
@@ -68,6 +74,8 @@ new #[Title('إعدادات البوت')] #[Layout('layouts.app')] class extends
             'workingHours' => 'required|in:24_7,working_hours',
             'scoreThreshold' => 'required|integer|min:0|max:100',
             'unproductiveMessages' => 'required|integer|min:1|max:50',
+            'followUpsEnabled' => 'required|boolean',
+            'maxFollowUps' => 'required|integer|min:1|max:10',
         ]);
 
         $company = Company::findOrFail($this->companyId);
@@ -77,6 +85,8 @@ new #[Title('إعدادات البوت')] #[Layout('layouts.app')] class extends
                 'tone' => $this->tone,
                 'active' => $this->active,
                 'working_hours' => $this->workingHours,
+                'follow_ups_enabled' => $this->followUpsEnabled,
+                'max_follow_ups' => $this->maxFollowUps,
                 'escalation_rules' => [
                     'score_threshold' => $this->scoreThreshold,
                     'unproductive_messages' => $this->unproductiveMessages,
@@ -177,6 +187,22 @@ new #[Title('إعدادات البوت')] #[Layout('layouts.app')] class extends
                             <flux:label>أقصى عدد رسائل غير منتجة قبل التحويل</flux:label>
                             <flux:input type="number" wire:model="unproductiveMessages" required />
                             <flux:error name="unproductiveMessages" />
+                        </flux:field>
+                    </div>
+                </div>
+
+                {{-- Follow-Up Rules --}}
+                <div class="border-t border-neutral-200 pt-4 dark:border-neutral-700 space-y-4">
+                    <h3 class="text-sm font-semibold text-neutral-600 dark:text-neutral-400">إعدادات المتابعة التلقائية</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <flux:field class="col-span-2">
+                            <flux:checkbox wire:model="followUpsEnabled" label="تمكين المتابعة التلقائية للعملاء (إعادة تنشيط العملاء غير النشطين)" />
+                        </flux:field>
+
+                        <flux:field>
+                            <flux:label>أقصى عدد رسائل متابعة لكل عميل</flux:label>
+                            <flux:input type="number" wire:model="maxFollowUps" required />
+                            <flux:error name="maxFollowUps" />
                         </flux:field>
                     </div>
                 </div>
