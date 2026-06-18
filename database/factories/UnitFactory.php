@@ -18,7 +18,7 @@ class UnitFactory extends Factory
             'company_id' => Company::factory(),
             'title' => fake()->words(3, true),
             'description' => fake()->paragraph(),
-            'type' => fake()->randomElement(['apartment', 'duplex', 'penthouse', 'villa', 'studio']),
+            'type' => fake()->randomElement(['apartment', 'duplex', 'penthouse', 'villa', 'twinhouse', 'townhouse', 'standalone', 'chalet', 'studio', 'compound', 'building', 'office', 'retail', 'clinic', 'land']),
             'rooms' => fake()->numberBetween(1, 6),
             'area' => fake()->numberBetween(50, 500),
             'price' => fake()->numberBetween(500000, 20000000),

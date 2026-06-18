@@ -101,7 +101,7 @@ new #[Title('dashboard.units')] class extends Component {
         $this->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'type' => 'required|in:apartment,duplex,penthouse,villa,studio',
+            'type' => 'required|in:apartment,duplex,penthouse,villa,twinhouse,townhouse,standalone,chalet,studio,compound,building,office,retail,clinic,land',
             'rooms' => 'required|integer|min:1',
             'area' => 'required|integer|min:1',
             'price' => 'required|integer|min:0',
@@ -281,222 +281,230 @@ new #[Title('dashboard.units')] class extends Component {
 }; ?>
 
 <div class="flex h-full w-full flex-1 flex-col gap-4" dir="{{ $dir ?? (app()->getLocale() === 'ar' ? 'rtl' : 'ltr') }}">
-    {{-- Header --}}
-    <div class="flex flex-wrap items-center justify-between gap-3">
-        <h1 class="text-xl font-bold">{{ __('dashboard.units') }}</h1>
+    @if (! $showForm)
+        {{-- Header --}}
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <h1 class="text-xl font-bold">{{ __('dashboard.units') }}</h1>
 
-        <div class="flex flex-wrap items-center gap-3">
-            <flux:input wire:model.live="searchQuery" :placeholder="__('units.search_placeholder')" class="min-w-[200px]" />
+            <div class="flex flex-wrap items-center gap-3">
+                <flux:input wire:model.live="searchQuery" :placeholder="__('units.search_placeholder')" class="min-w-[200px]" />
 
-            <flux:select wire:model.live="filterStatus" :placeholder="__('units.status')">
-                <option value="">{{ __('units.all_statuses') }}</option>
-                <option value="available">{{ __('units.available') }}</option>
-                <option value="reserved">{{ __('units.reserved') }}</option>
-                <option value="sold">{{ __('units.sold') }}</option>
-            </flux:select>
+                <flux:select wire:model.live="filterStatus" :placeholder="__('units.status')">
+                    <option value="">{{ __('units.all_statuses') }}</option>
+                    <option value="available">{{ __('units.available') }}</option>
+                    <option value="reserved">{{ __('units.reserved') }}</option>
+                    <option value="sold">{{ __('units.sold') }}</option>
+                </flux:select>
 
-            @can('manageUnits', auth()->user()->company)
-                <flux:button variant="primary" wire:click="openCreateForm">{{ __('units.add_unit_btn') }}</flux:button>
-            @endcan
+                @can('manageUnits', auth()->user()->company)
+                    <flux:button variant="primary" wire:click="openCreateForm">{{ __('units.add_unit_btn') }}</flux:button>
+                @endcan
+            </div>
         </div>
-    </div>
 
-    {{-- Units Grid --}}
-    <div class="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        @forelse ($this->units as $unit)
-            <div class="flex flex-col rounded-xl border border-neutral-200 dark:border-neutral-700">
-                @php $image = $unit->media()->where('type', 'image')->orderBy('sort_order')->first(); @endphp
-                <div class="aspect-video w-full overflow-hidden rounded-t-xl bg-neutral-100 dark:bg-neutral-800">
-                    @if ($image)
-                        <img src="{{ Storage::url($image->path) }}" alt="{{ $unit->title }}" class="h-full w-full object-cover" />
-                    @else
-                        <div class="flex h-full items-center justify-center text-neutral-400">
-                            <flux:icon name="photo" class="h-10 w-10" />
+        {{-- Units Grid --}}
+        <div class="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            @forelse ($this->units as $unit)
+                <div class="flex flex-col rounded-xl border border-neutral-200 dark:border-neutral-700">
+                    @php $image = $unit->media()->where('type', 'image')->orderBy('sort_order')->first(); @endphp
+                    <div class="aspect-video w-full overflow-hidden rounded-t-xl bg-neutral-100 dark:bg-neutral-800">
+                        @if ($image)
+                            <img src="{{ Storage::disk('public')->url($image->path) }}" alt="{{ $unit->title }}" class="h-full w-full object-cover" />
+                        @else
+                            <div class="flex h-full items-center justify-center text-neutral-400">
+                                <flux:icon name="photo" class="h-10 w-10" />
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="flex flex-1 flex-col gap-2 p-3">
+                        <h3 class="font-semibold">{{ $unit->title }}</h3>
+
+                        <div class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-neutral-500">
+                            <span>{{ __('units.'.$unit->type) }}</span>
+                            <span>{{ $unit->rooms }} {{ __('units.rooms_suffix') }}</span>
+                            <span>{{ $unit->area }} {{ __('units.area_suffix') }}</span>
+                        </div>
+
+                        <p class="text-xs text-neutral-500">{{ $unit->location }}</p>
+
+                        <p class="text-sm font-bold">{{ number_format($unit->price) }} {{ __('units.currency_suffix') }}</p>
+
+                        <div class="flex items-center gap-2">
+                            @php
+                                $badgeMap = ['available' => 'success', 'reserved' => 'warning', 'sold' => 'danger'];
+                                $labelMap = [
+                                    'available' => __('units.available'),
+                                    'reserved' => __('units.reserved'),
+                                    'sold' => __('units.sold'),
+                                ];
+                            @endphp
+                            <flux:badge variant="{{ $badgeMap[$unit->status->value] }}" size="sm">{{ $labelMap[$unit->status->value] }}</flux:badge>
+                        </div>
+
+                        <div class="flex items-center gap-3 text-[11px] text-neutral-400">
+                            @if ($unit->images_count > 0)
+                                <span>📷 {{ $unit->images_count }}</span>
+                            @endif
+                            @if ($unit->pdfs_count > 0)
+                                <span>📄 {{ $unit->pdfs_count }}</span>
+                            @endif
+                            @if ($unit->floorplans_count > 0)
+                                <span>📐 {{ $unit->floorplans_count }}</span>
+                            @endif
+                            @if ($unit->videos_count > 0)
+                                <span>🎬 {{ $unit->videos_count }}</span>
+                            @endif
+                        </div>
+
+                        @can('manageUnits', auth()->user()->company)
+                            <div class="mt-auto flex items-center gap-2 pt-2">
+                                <flux:button size="xs" wire:click="edit({{ $unit->id }})">{{ __('units.edit') }}</flux:button>
+                                <flux:button size="xs" variant="danger" wire:click="delete({{ $unit->id }})" wire:confirm="{{ __('units.delete_confirm') }}">{{ __('units.delete') }}</flux:button>
+                            </div>
+                        @endcan
+                    </div>
+                </div>
+            @empty
+                <div class="col-span-full flex items-center justify-center py-20">
+                    <p class="text-neutral-500">{{ __('units.no_units') }}</p>
+                </div>
+            @endforelse
+        </div>
+
+        {{-- Pagination --}}
+        <div class="mt-4" dir="ltr">
+            {{ $this->units->links() }}
+        </div>
+    @else
+        {{-- Create/Edit Form (Inline Page, not overlay) --}}
+        <div class="w-full rounded-xl bg-white p-6 border border-neutral-200 dark:border-neutral-700 dark:bg-zinc-900 shadow-sm">
+            <div class="mb-6 flex items-center justify-between">
+                <h2 class="text-lg font-bold">{{ $unitId ? __('units.edit_unit') : __('units.add_unit') }}</h2>
+                <flux:button size="sm" variant="ghost" wire:click="resetForm">✕</flux:button>
+            </div>
+
+            <form wire:submit="save" class="space-y-6">
+                {{-- Basic Info --}}
+                <div class="space-y-4">
+                    <h3 class="text-sm font-semibold text-neutral-600 dark:text-neutral-400">{{ __('units.basic_info') }}</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <flux:input wire:model="title" :label="__('units.title_label')" required class="col-span-2" />
+                        <flux:select wire:model="type" :label="__('units.type')" required>
+                            <option value="apartment">{{ __('units.apartment') }}</option>
+                            <option value="duplex">{{ __('units.duplex') }}</option>
+                            <option value="penthouse">{{ __('units.penthouse') }}</option>
+                            <option value="villa">{{ __('units.villa') }}</option>
+                            <option value="twinhouse">{{ __('units.twinhouse') }}</option>
+                            <option value="townhouse">{{ __('units.townhouse') }}</option>
+                            <option value="standalone">{{ __('units.standalone') }}</option>
+                            <option value="chalet">{{ __('units.chalet') }}</option>
+                            <option value="studio">{{ __('units.studio') }}</option>
+                            <option value="compound">{{ __('units.compound') }}</option>
+                            <option value="building">{{ __('units.building') }}</option>
+                            <option value="office">{{ __('units.office') }}</option>
+                            <option value="retail">{{ __('units.retail') }}</option>
+                            <option value="clinic">{{ __('units.clinic') }}</option>
+                            <option value="land">{{ __('units.land') }}</option>
+                        </flux:select>
+                        <flux:input wire:model="rooms" :label="__('units.rooms')" type="number" required />
+                        <flux:input wire:model="area" :label="__('units.area_label')" type="number" required />
+                        <flux:input wire:model="location" :label="__('units.location_label')" required class="col-span-2" />
+                    </div>
+                    <flux:textarea wire:model="description" :label="__('units.description_label')" required rows="3" />
+                </div>
+
+                {{-- Pricing --}}
+                <div class="space-y-4">
+                    <h3 class="text-sm font-semibold text-neutral-600 dark:text-neutral-400">{{ __('units.price_payment') }}</h3>
+                    <div class="grid grid-cols-3 gap-4">
+                        <flux:input wire:model="price" :label="__('units.price')" type="number" required />
+                        <flux:input wire:model="down_payment" :label="__('units.down_payment_label')" type="number" />
+                        <flux:input wire:model="installment_years" :label="__('units.installment_years')" type="number" />
+                    </div>
+                </div>
+
+                {{-- Status & Dates --}}
+                <div class="space-y-4">
+                    <h3 class="text-sm font-semibold text-neutral-600 dark:text-neutral-400">{{ __('units.status_dates') }}</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <flux:select wire:model="status" :label="__('units.status')" required>
+                            <option value="available">{{ __('units.available') }}</option>
+                            <option value="reserved">{{ __('units.reserved') }}</option>
+                            <option value="sold">{{ __('units.sold') }}</option>
+                        </flux:select>
+                        <flux:input wire:model="delivery_date" :label="__('units.delivery_date')" type="date" />
+                    </div>
+                </div>
+
+                {{-- Media Upload --}}
+                <div class="space-y-4">
+                    <h3 class="text-sm font-semibold text-neutral-600 dark:text-neutral-400">{{ __('units.media_title') }}</h3>
+
+                    <flux:input wire:model="newImages" :label="__('units.images_upload_label')" type="file" multiple accept="image/*" />
+
+                    @if ($newImages)
+                        <div class="flex flex-wrap gap-2">
+                            @foreach ($newImages as $index => $image)
+                                <div class="relative">
+                                    <img src="{{ $image->temporaryUrl() }}" class="h-20 w-20 rounded-lg object-cover" />
+                                </div>
+                            @endforeach
                         </div>
                     @endif
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <flux:input wire:model="newPdf" :label="__('units.pdf_upload_label')" type="file" accept=".pdf" />
+                        <flux:input wire:model="newFloorplan" :label="__('units.floorplan_upload_label')" type="file" accept=".pdf,.jpg,.png" />
+                    </div>
+
+                    <flux:input wire:model="videoUrl" :label="__('units.video_url_label')" type="url" placeholder="https://" />
                 </div>
 
-                <div class="flex flex-1 flex-col gap-2 p-3">
-                    <h3 class="font-semibold">{{ $unit->title }}</h3>
-
-                    <div class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-neutral-500">
-                        <span>{{ __('units.'.$unit->type) }}</span>
-                        <span>{{ $unit->rooms }} {{ __('units.rooms_suffix') }}</span>
-                        <span>{{ $unit->area }} {{ __('units.area_suffix') }}</span>
-                    </div>
-
-                    <p class="text-xs text-neutral-500">{{ $unit->location }}</p>
-
-                    <p class="text-sm font-bold">{{ number_format($unit->price) }} {{ __('units.currency_suffix') }}</p>
-
-                    <div class="flex items-center gap-2">
-                        @php
-                            $badgeMap = ['available' => 'success', 'reserved' => 'warning', 'sold' => 'danger'];
-                            $labelMap = [
-                                'available' => __('units.available'),
-                                'reserved' => __('units.reserved'),
-                                'sold' => __('units.sold'),
-                            ];
-                        @endphp
-                        <flux:badge variant="{{ $badgeMap[$unit->status->value] }}" size="sm">{{ $labelMap[$unit->status->value] }}</flux:badge>
-                    </div>
-
-                    <div class="flex items-center gap-3 text-[11px] text-neutral-400">
-                        @if ($unit->images_count > 0)
-                            <span>📷 {{ $unit->images_count }}</span>
-                        @endif
-                        @if ($unit->pdfs_count > 0)
-                            <span>📄 {{ $unit->pdfs_count }}</span>
-                        @endif
-                        @if ($unit->floorplans_count > 0)
-                            <span>📐 {{ $unit->floorplans_count }}</span>
-                        @endif
-                        @if ($unit->videos_count > 0)
-                            <span>🎬 {{ $unit->videos_count }}</span>
-                        @endif
-                    </div>
-
-                    @can('manageUnits', auth()->user()->company)
-                        <div class="mt-auto flex items-center gap-2 pt-2">
-                            <flux:button size="xs" wire:click="edit({{ $unit->id }})">{{ __('units.edit') }}</flux:button>
-                            <flux:button size="xs" variant="danger" wire:click="delete({{ $unit->id }})" wire:confirm="{{ __('units.delete_confirm') }}">{{ __('units.delete') }}</flux:button>
-                        </div>
-                    @endcan
-                </div>
-            </div>
-        @empty
-            <div class="col-span-full flex items-center justify-center py-20">
-                <p class="text-neutral-500">{{ __('units.no_units') }}</p>
-            </div>
-        @endforelse
-    </div>
-
-    {{-- Pagination --}}
-    <div class="mt-4" dir="ltr">
-        {{ $this->units->links() }}
-    </div>
-
-    {{-- Create/Edit Form Overlay --}}
-    @if ($showForm)
-        <div class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 py-10">
-            <div class="w-full max-w-2xl rounded-xl bg-white p-6 shadow-xl dark:bg-zinc-900">
-                <div class="mb-6 flex items-center justify-between">
-                    <h2 class="text-lg font-bold">{{ $unitId ? __('units.edit_unit') : __('units.add_unit') }}</h2>
-                    <flux:button size="sm" wire:click="resetForm">✕</flux:button>
-                </div>
-
-                <form wire:submit="save" class="space-y-6">
-                    {{-- Basic Info --}}
-                    <div class="space-y-4">
-                        <h3 class="text-sm font-semibold text-neutral-600">{{ __('units.basic_info') }}</h3>
-                        <div class="grid grid-cols-2 gap-4">
-                            <flux:input wire:model="title" :label="__('units.title_label')" required class="col-span-2" />
-                            <flux:select wire:model="type" :label="__('units.type')" required>
-                                <option value="apartment">{{ __('units.apartment') }}</option>
-                                <option value="duplex">{{ __('units.duplex') }}</option>
-                                <option value="penthouse">{{ __('units.penthouse') }}</option>
-                                <option value="villa">{{ __('units.villa') }}</option>
-                                <option value="studio">{{ __('units.studio') }}</option>
-                            </flux:select>
-                            <flux:input wire:model="rooms" :label="__('units.rooms')" type="number" required />
-                            <flux:input wire:model="area" :label="__('units.area_label')" type="number" required />
-                            <flux:input wire:model="location" :label="__('units.location_label')" required class="col-span-2" />
-                        </div>
-                        <flux:textarea wire:model="description" :label="__('units.description_label')" required rows="3" />
-                    </div>
-
-                    {{-- Pricing --}}
-                    <div class="space-y-4">
-                        <h3 class="text-sm font-semibold text-neutral-600">{{ __('units.price_payment') }}</h3>
-                        <div class="grid grid-cols-3 gap-4">
-                            <flux:input wire:model="price" :label="__('units.price')" type="number" required />
-                            <flux:input wire:model="down_payment" :label="__('units.down_payment_label')" type="number" />
-                            <flux:input wire:model="installment_years" :label="__('units.installment_years')" type="number" />
-                        </div>
-                    </div>
-
-                    {{-- Status & Dates --}}
-                    <div class="space-y-4">
-                        <h3 class="text-sm font-semibold text-neutral-600">{{ __('units.status_dates') }}</h3>
-                        <div class="grid grid-cols-2 gap-4">
-                            <flux:select wire:model="status" :label="__('units.status')" required>
-                                <option value="available">{{ __('units.available') }}</option>
-                                <option value="reserved">{{ __('units.reserved') }}</option>
-                                <option value="sold">{{ __('units.sold') }}</option>
-                            </flux:select>
-                            <flux:input wire:model="delivery_date" :label="__('units.delivery_date')" type="date" />
-                        </div>
-                    </div>
-
-                    {{-- Media Upload --}}
-                    <div class="space-y-4">
-                        <h3 class="text-sm font-semibold text-neutral-600">{{ __('units.media_title') }}</h3>
-
-                        <flux:input wire:model="newImages" :label="__('units.images_upload_label')" type="file" multiple accept="image/*" />
-
-                        @if ($newImages)
-                            <div class="flex flex-wrap gap-2">
-                                @foreach ($newImages as $index => $image)
-                                    <div class="relative">
-                                        <img src="{{ $image->temporaryUrl() }}" class="h-20 w-20 rounded-lg object-cover" />
+                {{-- Existing Media (edit mode) --}}
+                @if ($this->editingUnit && $this->editingUnit->media->where('type', 'image')->count() > 0)
+                    <div class="space-y-3">
+                        <h3 class="text-sm font-semibold text-neutral-600 dark:text-neutral-400">{{ __('units.image_reorder_label') }}</h3>
+                        <div x-data="{
+                            dragging: null,
+                            dragStart(index) {
+                                this.dragging = index;
+                            },
+                            drop($event, index) {
+                                if (this.dragging === null || this.dragging === index) return;
+                                const container = $event.currentTarget.closest('[data-reorder-list]');
+                                const items = [...container.querySelectorAll('[data-media-id]')];
+                                const ids = items.map(el => parseInt(el.dataset.mediaId));
+                                const [moved] = ids.splice(this.dragging, 1);
+                                ids.splice(index, 0, moved);
+                                $wire.reorderMedia(ids);
+                                this.dragging = null;
+                            }
+                        }">
+                            <div data-reorder-list class="flex flex-wrap gap-2">
+                                @foreach ($this->editingUnit->media->where('type', 'image')->sortBy('sort_order') as $media)
+                                    <div data-media-id="{{ $media->id }}"
+                                         draggable="true"
+                                         @dragstart="dragStart({{ $loop->index }})"
+                                         @dragover.prevent
+                                         @drop="drop($event, {{ $loop->index }})"
+                                         class="relative cursor-grab active:cursor-grabbing"
+                                         :class="{ 'opacity-50': dragging === {{ $loop->index }} }">
+                                        <img src="{{ Storage::disk('public')->url($media->path) }}" class="h-20 w-20 rounded-lg object-cover" />
+                                        <button type="button" wire:click="deleteMedia({{ $media->id }})" class="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] text-white hover:bg-red-600">×</button>
                                     </div>
                                 @endforeach
                             </div>
-                        @endif
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <flux:input wire:model="newPdf" :label="__('units.pdf_upload_label')" type="file" accept=".pdf" />
-                            <flux:input wire:model="newFloorplan" :label="__('units.floorplan_upload_label')" type="file" accept=".pdf,.jpg,.png" />
                         </div>
-
-                        <flux:input wire:model="videoUrl" :label="__('units.video_url_label')" type="url" placeholder="https://" />
                     </div>
+                @endif
 
-                    {{-- Existing Media (edit mode) --}}
-                    @if ($this->editingUnit && $this->editingUnit->media->where('type', 'image')->count() > 0)
-                        <div class="space-y-3">
-                            <h3 class="text-sm font-semibold text-neutral-600">{{ __('units.image_reorder_label') }}</h3>
-                            <div x-data="{
-                                dragging: null,
-                                dragStart(index) {
-                                    this.dragging = index;
-                                },
-                                drop($event, index) {
-                                    if (this.dragging === null || this.dragging === index) return;
-                                    const container = $event.currentTarget.closest('[data-reorder-list]');
-                                    const items = [...container.querySelectorAll('[data-media-id]')];
-                                    const ids = items.map(el => parseInt(el.dataset.mediaId));
-                                    const [moved] = ids.splice(this.dragging, 1);
-                                    ids.splice(index, 0, moved);
-                                    $wire.reorderMedia(ids);
-                                    this.dragging = null;
-                                }
-                            }">
-                                <div data-reorder-list class="flex flex-wrap gap-2">
-                                    @foreach ($this->editingUnit->media->where('type', 'image')->sortBy('sort_order') as $media)
-                                        <div data-media-id="{{ $media->id }}"
-                                             draggable="true"
-                                             @dragstart="dragStart({{ $loop->index }})"
-                                             @dragover.prevent
-                                             @drop="drop($event, {{ $loop->index }})"
-                                             class="relative cursor-grab active:cursor-grabbing"
-                                             :class="{ 'opacity-50': dragging === {{ $loop->index }} }">
-                                            <img src="{{ Storage::url($media->path) }}" class="h-20 w-20 rounded-lg object-cover" />
-                                            <button type="button" wire:click="deleteMedia({{ $media->id }})" class="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] text-white hover:bg-red-600">×</button>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </div>
-                        </div>
-                    @endif
-
-                    {{-- Actions --}}
-                    <div class="flex items-center justify-end gap-3 border-t border-neutral-200 pt-4 dark:border-neutral-700">
-                        <flux:button variant="ghost" wire:click="resetForm">{{ __('units.cancel') }}</flux:button>
-                        <flux:button variant="primary" type="submit">{{ __('units.save') }}</flux:button>
-                    </div>
-                </form>
-            </div>
+                {{-- Actions --}}
+                <div class="flex items-center justify-end gap-3 border-t border-neutral-200 pt-4 dark:border-neutral-700">
+                    <flux:button variant="ghost" wire:click="resetForm">{{ __('units.cancel') }}</flux:button>
+                    <flux:button variant="primary" type="submit">{{ __('units.save') }}</flux:button>
+                </div>
+            </form>
         </div>
     @endif
 </div>

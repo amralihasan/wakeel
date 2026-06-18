@@ -39,6 +39,12 @@ return [
     'studio' => 'ستوديو',
     'office' => 'مكتب إداري',
     'retail' => 'محل تجاري',
+    'twinhouse' => 'توين هاوس',
+    'standalone' => 'فيلا مستقلة',
+    'compound' => 'كمبوند / مشروع',
+    'building' => 'عمارة كاملة',
+    'clinic' => 'عيادة طبية',
+    'land' => 'أرض',
 
     // New keys for page and form
     'search_label' => 'بحث بالعنوان أو الموقع...',

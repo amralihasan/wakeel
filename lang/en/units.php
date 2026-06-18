@@ -39,6 +39,12 @@ return [
     'studio' => 'Studio',
     'office' => 'Office',
     'retail' => 'Retail',
+    'twinhouse' => 'Twinhouse',
+    'standalone' => 'Standalone Villa',
+    'compound' => 'Compound / Project',
+    'building' => 'Entire Building',
+    'clinic' => 'Medical Clinic',
+    'land' => 'Land Plot',
 
     // New keys for page and form
     'search_label' => 'Search by title or location...',

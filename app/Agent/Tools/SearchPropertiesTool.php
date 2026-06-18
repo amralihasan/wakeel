@@ -18,7 +18,7 @@ class SearchPropertiesTool extends Tool
             ->withNumberParameter('budget_max', 'أقصى ميزانية للعميل بالجنيه المصري', required: true)
             ->withNumberParameter('rooms', 'عدد الغرف المطلوب (اختياري)', required: false)
             ->withStringParameter('location', 'الموقع المطلوب (اختياري)', required: false)
-            ->withStringParameter('type', 'نوع الوحدة: apartment, duplex, penthouse, villa, studio (اختياري)', required: false)
+            ->withStringParameter('type', 'نوع العقار: apartment, duplex, penthouse, villa, twinhouse, townhouse, standalone, chalet, studio, compound, building, office, retail, clinic, land (اختياري)', required: false)
             ->using($this);
     }
 
