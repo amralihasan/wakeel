@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\PlatformSetting;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,13 +16,19 @@ class SetLocale
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $locale = config('app.fallback_locale', 'ar');
+        try {
+            $fallback = PlatformSetting::get('default_locale', config('app.fallback_locale', 'ar'));
+        } catch (\Throwable) {
+            $fallback = config('app.fallback_locale', 'ar');
+        }
+
+        $locale = $fallback;
 
         if (auth()->check()) {
             $user = auth()->user();
-            $locale = $user->locale ?? $user->company->default_locale ?? $locale;
+            $locale = $user->locale ?? $user->company->default_locale ?? $fallback;
         } else {
-            $locale = session('locale', $locale);
+            $locale = session('locale', $fallback);
         }
 
         if (! in_array($locale, ['ar', 'en'])) {

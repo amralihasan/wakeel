@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\WhatsAppChannels\Tables;
 
+use App\Models\AdminAuditLog;
 use App\Models\WhatsAppChannel;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -64,10 +65,20 @@ class WhatsAppChannelsTable
                             ->required(),
                     ])
                     ->action(function (WhatsAppChannel $record, array $data) {
+                        $before = ['status' => $record->status, 'assigned_company_id' => $record->assigned_company_id];
                         $record->update([
                             'assigned_company_id' => $data['company_id'],
                             'status' => 'assigned',
                         ]);
+                        AdminAuditLog::record(
+                            auth()->user(),
+                            'number_assigned',
+                            'whatsapp_channel',
+                            $record->id,
+                            "Assigned number {$record->number} to company {$data['company_id']}",
+                            $before,
+                            ['status' => 'assigned', 'assigned_company_id' => $data['company_id']],
+                        );
                     }),
                 Action::make('release')
                     ->label(__('admin.release'))
@@ -76,10 +87,20 @@ class WhatsAppChannelsTable
                     ->requiresConfirmation()
                     ->visible(fn (WhatsAppChannel $record) => $record->status === 'assigned')
                     ->action(function (WhatsAppChannel $record) {
+                        $before = ['status' => $record->status, 'assigned_company_id' => $record->assigned_company_id];
                         $record->update([
                             'status' => 'available',
                             'assigned_company_id' => null,
                         ]);
+                        AdminAuditLog::record(
+                            auth()->user(),
+                            'number_released',
+                            'whatsapp_channel',
+                            $record->id,
+                            "Released number {$record->number} from company",
+                            $before,
+                            ['status' => 'available', 'assigned_company_id' => null],
+                        );
                     }),
                 Action::make('retire')
                     ->label(__('admin.retired_status'))
@@ -87,7 +108,19 @@ class WhatsAppChannelsTable
                     ->color('danger')
                     ->icon('heroicon-o-archive-box')
                     ->visible(fn (WhatsAppChannel $record): bool => $record->status !== 'retired')
-                    ->action(fn (WhatsAppChannel $record) => $record->update(['status' => 'retired'])),
+                    ->action(function (WhatsAppChannel $record) {
+                        $before = ['status' => $record->status];
+                        $record->update(['status' => 'retired']);
+                        AdminAuditLog::record(
+                            auth()->user(),
+                            'number_retired',
+                            'whatsapp_channel',
+                            $record->id,
+                            "Retired number {$record->number}",
+                            $before,
+                            ['status' => 'retired'],
+                        );
+                    }),
                 Action::make('make_available')
                     ->label(__('admin.make_available'))
                     ->requiresConfirmation()

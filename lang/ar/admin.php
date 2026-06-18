@@ -208,4 +208,21 @@ return [
     'escalated_at' => 'تم التحويل في',
     'lead_phone' => 'هاتف العميل المحتمل',
     'ai_summary' => 'ملخص الذكاء الاصطناعي',
+
+    // Dashboard Widgets
+    'revenue_vs_cost' => 'الإيراد مقابل التكلفة (آخر ٦ أشهر)',
+    'mrr' => 'الإيراد الشهري المتكرر',
+    'growth_chart' => 'النمو (آخر ٣٠ يوم)',
+    'new_signups' => 'تسجيلات جديدة',
+    'top_tenants' => 'أكثر المستأجرين استخداماً',
+
+    // Health Strip
+    'health_failed_jobs' => 'المهام الفاشلة',
+    'health_past_due' => 'الاشتراكات المتأخرة',
+    'health_stuck_handoffs' => 'التحويلات العالقة',
+    'health_over_quota' => 'متجاوزو الحصة',
+    'health_check_horizon' => 'تحقق من Horizon',
+    'health_all_clear' => 'كل شيء على ما يرام',
+    'health_needs_attention' => 'يحتاج انتباهاً',
+    'health_pending_over_2h' => 'معلق أكثر من ساعتين',
 ];

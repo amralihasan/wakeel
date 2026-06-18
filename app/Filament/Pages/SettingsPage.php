@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\AdminAuditLog;
 use App\Models\PlatformSetting;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -157,9 +158,23 @@ class SettingsPage extends Page
     {
         $state = $this->form->getState();
 
+        $before = collect(array_keys($state))
+            ->mapWithKeys(fn (string $key) => [$key => PlatformSetting::get($key)])
+            ->toArray();
+
         foreach ($state as $key => $value) {
             PlatformSetting::set($key, $value);
         }
+
+        AdminAuditLog::record(
+            auth()->user(),
+            'settings_updated',
+            'platform_setting',
+            null,
+            'Platform settings updated',
+            $before,
+            $state,
+        );
 
         if (isset($state['maintenance_mode'])) {
             if ($state['maintenance_mode']) {

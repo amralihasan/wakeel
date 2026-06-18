@@ -4,8 +4,7 @@ use App\Http\Controllers\Marketing\ContactController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('throttle:60,1')->group(function () {
-    Route::view('/', 'marketing.home')->name('home');
-    Route::redirect('/home-page', '/')->name('marketing.home');
+    Route::view('/', 'marketing.home')->name('marketing.home');
     Route::view('/features', 'marketing.features')->name('marketing.features');
     Route::view('/how-it-works', 'marketing.how-it-works')->name('marketing.how-it-works');
     Route::view('/pricing', 'marketing.pricing')->name('marketing.pricing');

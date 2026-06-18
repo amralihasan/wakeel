@@ -3,7 +3,12 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Widgets\AdminOverviewWidget;
+use App\Filament\Widgets\GrowthChartWidget;
+use App\Filament\Widgets\HealthStripWidget;
+use App\Filament\Widgets\RevenueVsCostChartWidget;
+use App\Filament\Widgets\TopTenantsWidget;
 use App\Http\Middleware\SetLocale;
+use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -31,6 +36,10 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->profile()
+            ->multiFactorAuthentication([
+                AppAuthentication::make(),
+            ], isRequired: true)
             ->colors([
                 'primary' => Color::Amber,
             ])
@@ -42,6 +51,10 @@ class AdminPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
                 AdminOverviewWidget::class,
+                HealthStripWidget::class,
+                RevenueVsCostChartWidget::class,
+                GrowthChartWidget::class,
+                TopTenantsWidget::class,
                 AccountWidget::class,
                 FilamentInfoWidget::class,
             ])

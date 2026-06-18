@@ -208,4 +208,21 @@ return [
     'escalated_at' => 'Escalated At',
     'lead_phone' => 'Lead Phone',
     'ai_summary' => 'AI Summary',
+
+    // Dashboard Widgets
+    'revenue_vs_cost' => 'Revenue vs Cost (last 6 months)',
+    'mrr' => 'MRR',
+    'growth_chart' => 'Growth (last 30 days)',
+    'new_signups' => 'New Signups',
+    'top_tenants' => 'Top Tenants by Usage',
+
+    // Health Strip
+    'health_failed_jobs' => 'Failed Jobs',
+    'health_past_due' => 'Past-Due Subscriptions',
+    'health_stuck_handoffs' => 'Stuck Handoffs',
+    'health_over_quota' => 'Over-Quota Tenants',
+    'health_check_horizon' => 'Check Horizon',
+    'health_all_clear' => 'All clear',
+    'health_needs_attention' => 'Needs attention',
+    'health_pending_over_2h' => 'Pending > 2 hours',
 ];

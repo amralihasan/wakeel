@@ -19,10 +19,7 @@ use function Pest\Laravel\actingAs;
 uses(RefreshDatabase::class);
 
 it('allows super-admins to access the admin panel', function () {
-    $superAdmin = User::factory()->create([
-        'is_super_admin' => true,
-        'company_id' => null,
-    ]);
+    $superAdmin = User::factory()->superAdmin()->create();
 
     actingAs($superAdmin)
         ->get('/admin')
@@ -82,10 +79,7 @@ it('provisions a whatsapp number from the database-driven pool', function () {
 });
 
 it('renders the company resource list page with correct stats', function () {
-    $superAdmin = User::factory()->create([
-        'is_super_admin' => true,
-        'company_id' => null,
-    ]);
+    $superAdmin = User::factory()->superAdmin()->create();
 
     $company = Company::factory()->create([
         'plan' => 'starter',
@@ -119,10 +113,7 @@ it('renders the company resource list page with correct stats', function () {
 });
 
 it('renders the whatsapp channels resource page', function () {
-    $superAdmin = User::factory()->create([
-        'is_super_admin' => true,
-        'company_id' => null,
-    ]);
+    $superAdmin = User::factory()->superAdmin()->create();
 
     WhatsAppChannel::create([
         'number' => '+201111111111',
@@ -138,10 +129,7 @@ it('renders the whatsapp channels resource page', function () {
 });
 
 it('renders the handoffs resource page', function () {
-    $superAdmin = User::factory()->create([
-        'is_super_admin' => true,
-        'company_id' => null,
-    ]);
+    $superAdmin = User::factory()->superAdmin()->create();
 
     $company = Company::factory()->create();
     $lead = Lead::factory()->create(['company_id' => $company->id, 'customer_phone' => '+201111111112']);

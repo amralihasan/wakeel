@@ -54,4 +54,14 @@ class UserFactory extends Factory
             'role' => UserRole::Owner,
         ]);
     }
+
+    public function superAdmin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_super_admin' => true,
+            'company_id' => null,
+            'role' => UserRole::Owner,
+            'app_authentication_secret' => 'JBSWY3DPEHPK3PXP',
+        ]);
+    }
 }
