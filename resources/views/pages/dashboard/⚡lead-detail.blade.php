@@ -41,7 +41,7 @@ new #[Title('leads.lead_profile')] #[Layout('layouts.app')] class extends Compon
         }
 
         return Message::where('conversation_id', $this->lead->conversation->id)
-            ->orderBy('created_at', 'asc')
+            ->orderBy('id', 'asc')
             ->get();
     }
 
@@ -230,11 +230,11 @@ new #[Title('leads.lead_profile')] #[Layout('layouts.app')] class extends Compon
             <div class="flex-1 p-6 overflow-y-auto max-h-[600px]">
                 @if ($activeTab === 'chat')
                     {{-- Conversation Messages list --}}
-                    <div class="space-y-4">
+                    <div class="space-y-1.5">
                         @forelse ($this->messages as $message)
                             <div class="flex {{ $message->direction === MessageDirection::Inbound ? 'justify-start' : 'justify-end' }}">
-                                <div class="max-w-[75%] rounded-xl px-4 py-2.5 text-xs shadow-2xs leading-relaxed {{ $message->direction === MessageDirection::Inbound ? 'bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200' : ($message->sender === MessageSender::Bot ? 'bg-blue-600 text-white' : 'bg-indigo-600 text-white') }}">
-                                    <p>{{ $message->body }}</p>
+                                <div dir="rtl" class="max-w-[75%] rounded-xl px-3 py-1.5 text-xs shadow-2xs leading-relaxed {{ $message->direction === MessageDirection::Inbound ? 'bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200' : ($message->sender === MessageSender::Bot ? 'bg-blue-600 text-white' : 'bg-indigo-600 text-white') }}">
+                                    {{ $message->body }}
                                     @if ($message->media_url)
                                         <div class="mt-2">
                                             @if (str_starts_with($message->media_type, 'image/'))

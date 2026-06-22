@@ -49,6 +49,16 @@ new #[Title('conversations.title')] class extends Component {
     }
 
     #[Computed]
+    public function activeConversation()
+    {
+        if (! $this->activeConversationId) {
+            return null;
+        }
+
+        return Conversation::with(['lead'])->find($this->activeConversationId);
+    }
+
+    #[Computed]
     public function conversationMessages()
     {
         if (! $this->activeConversationId) {
@@ -56,7 +66,7 @@ new #[Title('conversations.title')] class extends Component {
         }
 
         return Message::where('conversation_id', $this->activeConversationId)
-            ->orderBy('created_at')
+            ->orderBy('id', 'asc')
             ->get();
     }
 
@@ -241,38 +251,65 @@ new #[Title('conversations.title')] class extends Component {
     </div>
 
     {{-- Main Chat Area --}}
-    <div class="flex flex-1 flex-col rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-zinc-900">
-        @if ($activeConversationId)
-            {{-- Message Thread --}}
-            <div class="flex-1 space-y-3 overflow-y-auto p-4">
+    <div class="flex flex-1 flex-col rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 overflow-hidden shadow-sm h-[600px]">
+        @if ($activeConversationId && $this->activeConversation)
+            {{-- WhatsApp Header --}}
+            <div class="px-4 py-3 bg-[#f0f2f5] dark:bg-[#202c33] border-b border-zinc-200 dark:border-zinc-700/50 flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-zinc-300 dark:bg-zinc-700 flex items-center justify-center font-bold text-zinc-700 dark:text-zinc-300">
+                        💬
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-semibold text-zinc-800 dark:text-zinc-200">{{ $this->activeConversation->customer_phone }}</h2>
+                        @if($this->activeConversation->lead?->name)
+                            <p class="text-[10px] text-zinc-500 mt-0.5">{{ $this->activeConversation->lead->name }}</p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            {{-- Message Thread with WhatsApp background --}}
+            <div x-data="{ scrollToBottom() { this.$el.scrollTop = this.$el.scrollHeight } }" x-init="scrollToBottom(); new MutationObserver(() => scrollToBottom()).observe($el, { childList: true, subtree: true })" class="flex-1 space-y-1 overflow-y-auto p-4 bg-[#efeae2] dark:bg-[#0b141a]">
                 @forelse ($this->conversationMessages as $message)
-                    <div class="flex {{ $message->direction === 'inbound' ? 'justify-start' : 'justify-end' }}">
-                        <div class="max-w-[70%] rounded-xl px-4 py-2 text-sm {{ $message->direction === 'inbound' ? 'bg-neutral-100 dark:bg-neutral-800' : ($message->sender === 'bot' ? 'bg-blue-500 text-white' : 'bg-indigo-500 text-white') }}">
-                            <p>{{ $message->body }}</p>
-                            <span class="block text-[10px] opacity-70">{{ \Carbon\Carbon::parse($message->created_at)->format('H:i') }}</span>
+                    <div class="flex {{ $message->direction === MessageDirection::Inbound ? 'justify-start' : 'justify-end' }}">
+                        <div class="flex flex-col {{ $message->direction === MessageDirection::Inbound ? 'items-start' : 'items-end' }} max-w-[75%]">
+                            {{-- Sender Name --}}
+                            <span class="text-[10px] text-zinc-500 dark:text-zinc-400 mb-0 px-1 font-medium">
+                                {{ $message->direction === MessageDirection::Inbound ? __('leads.client') : ($message->sender === MessageSender::Bot ? __('leads.smart_assistant') : __('dashboard.human_agent')) }}
+                            </span>
+
+                            {{-- Bubble --}}
+                            <div dir="rtl" class="rounded-2xl px-3 py-1 text-[15px] shadow-xs leading-relaxed whitespace-pre-wrap {{ $message->direction === MessageDirection::Inbound ? 'bg-[#d9fdd3] dark:bg-[#005c4b] text-zinc-900 dark:text-zinc-100 rounded-tr-xs border border-[#d1f4cb] dark:border-[#004e3f]' : ($message->sender === MessageSender::Bot ? 'bg-white dark:bg-[#202c33] text-zinc-900 dark:text-zinc-100 rounded-tl-xs border border-zinc-200/50 dark:border-zinc-700/50' : 'bg-[#e7f3ff] dark:bg-[#18222d] text-zinc-900 dark:text-zinc-100 rounded-tl-xs border border-[#d2e8ff] dark:border-[#132c45]') }}">
+                                {{ $message->body }}
+                            </div>
+
+                            {{-- Timestamp --}}
+                            <span class="text-[9px] text-zinc-500 dark:text-zinc-400 mt-0 px-1">
+                                {{ \Carbon\Carbon::parse($message->created_at)->format('H:i') }}
+                            </span>
                         </div>
                     </div>
                 @empty
                     <div class="flex h-full items-center justify-center">
-                        <p class="text-sm text-neutral-500">{{ __('conversations.no_messages') }}</p>
+                        <p class="text-sm text-zinc-500">{{ __('conversations.no_messages') }}</p>
                     </div>
                 @endforelse
             </div>
 
-            {{-- Composer & Resolve --}}
-            <div class="border-t border-neutral-200 p-4 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 rounded-b-xl">
+            {{-- Composer & Resolve resembling WhatsApp --}}
+            <div class="p-4 bg-[#f0f2f5] dark:bg-[#202c33] border-t border-zinc-200 dark:border-zinc-700/50">
                 <form wire:submit="sendMessage" class="flex gap-2">
-                    <flux:textarea wire:model="replyText" placeholder="{{ __('conversations.type_message') }}" class="flex-1" rows="2" />
-                    <flux:button type="submit" variant="primary" class="self-start">{{ __('conversations.send') }}</flux:button>
+                    <flux:textarea wire:model="replyText" placeholder="{{ __('conversations.type_message') }}" class="flex-1 rounded-xl bg-white dark:bg-zinc-800 border-none shadow-none text-sm" rows="2" />
+                    <flux:button type="submit" variant="primary" class="self-start rounded-full shrink-0">{{ __('conversations.send') }}</flux:button>
                 </form>
                 <div class="mt-2 flex items-center gap-2">
-                    <flux:input wire:model="resolutionNotes" placeholder="{{ __('conversations.resolution_notes_placeholder') }}" class="flex-1" />
-                    <flux:button wire:click="resolveConversation" class="shrink-0 cursor-pointer rounded-lg bg-red-600 px-4 py-2 text-xs font-medium text-white transition hover:bg-red-700">{{ __('conversations.resolve') }}</flux:button>
+                    <flux:input wire:model="resolutionNotes" placeholder="{{ __('conversations.resolution_notes_placeholder') }}" class="flex-1 rounded-full bg-white dark:bg-zinc-800 border-none shadow-none text-xs" />
+                    <flux:button wire:click="resolveConversation" class="shrink-0 cursor-pointer rounded-full bg-red-600 px-4 py-2 text-xs font-medium text-white transition hover:bg-red-700">{{ __('conversations.resolve') }}</flux:button>
                 </div>
             </div>
         @else
             <div class="flex h-full items-center justify-center">
-                <p class="text-sm text-neutral-500">{{ __('conversations.select_conversation') }}</p>
+                <p class="text-sm text-zinc-500">{{ __('conversations.select_conversation') }}</p>
             </div>
         @endif
     </div>

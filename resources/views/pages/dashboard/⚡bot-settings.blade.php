@@ -9,6 +9,7 @@ use App\Enums\MessageSender;
 use App\Services\Agent\AgentRunner;
 use App\Services\WhatsApp\ConversationSession;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -127,11 +128,46 @@ new #[Title('bot.assistant_settings_title')] #[Layout('layouts.app')] class exte
         app(AgentRunner::class)->handle($company, '+200000000000', $text);
     }
 
+    public function resetSandbox(): void
+    {
+        $company = Company::findOrFail($this->companyId);
+
+        // Delete all messages associated with the sandbox conversation
+        Message::where('conversation_id', $this->sandboxConversationId)->delete();
+
+        // Clear conversation session history from cache
+        Cache::forget("session:{$this->companyId}:+200000000000.history");
+        Cache::forget("session:{$this->companyId}:+200000000000.mode");
+        Cache::forget("session:{$this->companyId}:+200000000000.updated_at");
+
+        // Reset the Lead state associated with sandbox
+        $lead = Lead::where('company_id', $this->companyId)
+            ->where('customer_phone', '+200000000000')
+            ->first();
+
+        if ($lead) {
+            $lead->update([
+                'name' => __('bot.sandbox_lead_name'),
+                'status' => 'new',
+                'budget_max' => null,
+                'score' => 0,
+            ]);
+        }
+
+        // Reset the Conversation mode back to bot
+        $conversation = Conversation::find($this->sandboxConversationId);
+        if ($conversation) {
+            $conversation->update(['mode' => 'bot']);
+        }
+
+        Flux::toast(variant: 'success', text: __('bot.sandbox_reset_success'));
+    }
+
     #[Computed]
     public function sandboxMessages()
     {
         return Message::where('conversation_id', $this->sandboxConversationId)
-            ->orderBy('created_at')
+            ->orderBy('id', 'asc')
             ->get();
     }
 }; ?>
@@ -214,32 +250,51 @@ new #[Title('bot.assistant_settings_title')] #[Layout('layouts.app')] class exte
     </div>
 
     {{-- Test Bot Box --}}
-    <div class="w-96 shrink-0 flex flex-col rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-zinc-900">
-        <div class="border-b border-neutral-200 px-4 py-3 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 rounded-t-xl">
-            <h2 class="text-sm font-semibold">{{ __('bot.test_assistant_heading') }}</h2>
-            <p class="text-[10px] text-neutral-500 mt-1">{{ __('bot.test_assistant_desc') }}</p>
+    <div class="w-96 shrink-0 flex flex-col rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 overflow-hidden shadow-sm h-[600px]">
+        {{-- Header resembling WhatsApp header --}}
+        <div class="px-4 py-3 bg-[#f0f2f5] dark:bg-[#202c33] border-b border-zinc-200 dark:border-zinc-700/50 flex justify-between items-center">
+            <div>
+                <h2 class="text-sm font-semibold text-zinc-800 dark:text-zinc-200">{{ __('bot.test_assistant_heading') }}</h2>
+                <p class="text-[10px] text-zinc-500 mt-0.5">{{ __('bot.test_assistant_desc') }}</p>
+            </div>
+            <flux:button wire:click="resetSandbox" size="xs" variant="subtle" icon="arrow-path" class="text-zinc-600 dark:text-zinc-400">
+                {{ __('bot.reset_sandbox_btn') }}
+            </flux:button>
         </div>
 
-        {{-- Chat History --}}
-        <div class="flex-1 space-y-3 overflow-y-auto p-4 max-h-[400px]">
+        {{-- Chat History with WhatsApp classic bg --}}
+        <div x-data="{ scrollToBottom() { this.$el.scrollTop = this.$el.scrollHeight } }" x-init="scrollToBottom(); new MutationObserver(() => scrollToBottom()).observe($el, { childList: true, subtree: true })" class="flex-1 space-y-1 overflow-y-auto p-4 bg-[#efeae2] dark:bg-[#0b141a]">
             @forelse ($this->sandboxMessages as $message)
-                <div class="flex {{ $message->direction === 'inbound' ? 'justify-start' : 'justify-end' }}">
-                    <div class="max-w-[80%] rounded-xl px-3 py-1.5 text-xs {{ $message->direction === 'inbound' ? 'bg-neutral-100 dark:bg-neutral-800' : 'bg-blue-500 text-white' }}">
-                        <p>{{ $message->body }}</p>
+                <div class="flex {{ $message->direction === MessageDirection::Inbound ? 'justify-start' : 'justify-end' }}">
+                    <div class="flex flex-col {{ $message->direction === MessageDirection::Inbound ? 'items-start' : 'items-end' }} max-w-[85%]">
+                        {{-- Sender Name --}}
+                        <span class="text-[9px] text-zinc-500 dark:text-zinc-400 mb-0 px-1 font-medium">
+                            {{ $message->direction === MessageDirection::Inbound ? __('leads.client') : __('leads.smart_assistant') }}
+                        </span>
+
+                        {{-- Bubble styled as WhatsApp --}}
+                        <div dir="rtl" class="rounded-2xl px-3 py-1 text-sm shadow-xs leading-relaxed whitespace-pre-wrap {{ $message->direction === MessageDirection::Inbound ? 'bg-[#d9fdd3] dark:bg-[#005c4b] text-zinc-900 dark:text-zinc-100 rounded-tr-xs border border-[#d1f4cb] dark:border-[#004e3f]' : 'bg-white dark:bg-[#202c33] text-zinc-900 dark:text-zinc-100 rounded-tl-xs border border-zinc-200/50 dark:border-zinc-700/50' }}">
+                            {{ $message->body }}
+                        </div>
+
+                        {{-- Timestamp --}}
+                        <span class="text-[8px] text-zinc-500 dark:text-zinc-400 mt-0 px-1">
+                            {{ $message->created_at ? \Carbon\Carbon::parse($message->created_at)->format('H:i') : now()->format('H:i') }}
+                        </span>
                     </div>
                 </div>
             @empty
                 <div class="flex h-full items-center justify-center py-20 text-center">
-                    <p class="text-xs text-neutral-500">{{ __('bot.test_assistant_placeholder') }}</p>
+                    <p class="text-xs text-zinc-500">{{ __('bot.test_assistant_placeholder') }}</p>
                 </div>
             @endforelse
         </div>
 
-        {{-- Message Composer --}}
-        <div class="border-t border-neutral-200 p-3 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 rounded-b-xl">
-            <form wire:submit="sendTestMessage" class="flex gap-2">
-                <flux:input wire:model="testMessage" placeholder="{{ __('bot.test_message_input_placeholder') }}" class="flex-1" />
-                <flux:button type="submit" size="sm" variant="primary">{{ __('bot.send') }}</flux:button>
+        {{-- Message Composer resembling WhatsApp --}}
+        <div class="p-3 bg-[#f0f2f5] dark:bg-[#202c33] border-t border-zinc-200 dark:border-zinc-700/50">
+            <form wire:submit="sendTestMessage" class="flex gap-2 items-center">
+                <flux:input wire:model="testMessage" placeholder="{{ __('bot.test_message_input_placeholder') }}" class="flex-1 rounded-full bg-white dark:bg-zinc-800 border-none shadow-none text-xs" />
+                <flux:button type="submit" size="sm" variant="primary" class="rounded-full shrink-0">{{ __('bot.send') }}</flux:button>
             </form>
         </div>
     </div>

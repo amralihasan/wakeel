@@ -46,4 +46,6 @@ return [
     'formal_arabic' => 'عربية فصحى مبسطة',
     'gulf_arabic' => 'لهجة خليجية ملائمة',
     'sandbox_lead_name' => 'تجربة المنصة',
+    'sandbox_reset_success' => 'تم إعادة تعيين محاكاة المساعد بنجاح',
+    'reset_sandbox_btn' => 'إعادة تعيين المحادثة',
 ];

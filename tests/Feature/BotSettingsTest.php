@@ -2,6 +2,7 @@
 
 use App\Enums\ConversationMode;
 use App\Enums\MessageDirection;
+use App\Enums\MessageSender;
 use App\Jobs\ProcessInboundMessageJob;
 use App\Models\Company;
 use App\Models\Conversation;
@@ -10,6 +11,7 @@ use App\Models\Message;
 use App\Models\User;
 use App\Models\WhatsAppChannel;
 use App\Services\Agent\SystemPromptBuilder;
+use App\Services\WhatsApp\ConversationSession;
 use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
 use Prism\Prism\Enums\FinishReason;
@@ -171,4 +173,52 @@ it('executes sandbox testing message loop without sending real WhatsApp message'
         ->where('direction', MessageDirection::Outbound)
         ->first();
     expect($outbound->body)->toBe('أهلاً بك في المحاكاة! أنا البوت.');
+});
+
+it('resets the sandbox conversation and messages successfully', function () {
+    $company = Company::factory()->create(['onboarding_completed' => true]);
+    $user = User::factory()->owner()->create(['company_id' => $company->id]);
+    actingAs($user);
+
+    $lead = Lead::factory()->create([
+        'company_id' => $company->id,
+        'customer_phone' => '+200000000000',
+        'name' => 'Old Name',
+        'score' => 50,
+        'budget_max' => 3000000,
+    ]);
+
+    $conversation = Conversation::factory()->create([
+        'company_id' => $company->id,
+        'lead_id' => $lead->id,
+        'customer_phone' => '+200000000000',
+        'mode' => ConversationMode::PendingHandoff,
+    ]);
+
+    $message = Message::create([
+        'company_id' => $company->id,
+        'conversation_id' => $conversation->id,
+        'direction' => MessageDirection::Inbound,
+        'sender' => MessageSender::Customer,
+        'body' => 'Test Message',
+    ]);
+
+    $session = app(ConversationSession::class);
+    $session->setCompany($company);
+    $session->setPhone('+200000000000');
+    $session->pushTurn(['role' => 'user', 'content' => 'Test Message']);
+
+    Livewire::test('pages::dashboard.bot-settings')
+        ->call('resetSandbox');
+
+    expect(Message::where('conversation_id', $conversation->id)->count())->toBe(0);
+
+    expect($session->history())->toBeEmpty();
+
+    $lead->refresh();
+    expect($lead->score)->toBe(0)
+        ->and($lead->budget_max)->toBeNull();
+
+    $conversation->refresh();
+    expect($conversation->mode)->toBe(ConversationMode::Bot);
 });

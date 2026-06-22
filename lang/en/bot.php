@@ -46,4 +46,6 @@ return [
     'formal_arabic' => 'Modern Standard Arabic (Formal)',
     'gulf_arabic' => 'Gulf Arabic',
     'sandbox_lead_name' => 'Platform Demo',
+    'sandbox_reset_success' => 'Assistant sandbox reset successfully',
+    'reset_sandbox_btn' => 'Reset Conversation',
 ];
