@@ -43,8 +43,8 @@ class CompaniesTable
                 TextColumn::make('conversations_count')
                     ->label(__('admin.usage_this_cycle'))
                     ->state(function (Company $record) {
-                        $limit = $record->getPlanDetails()['conversations_limit'];
-                        $limitText = $limit === -1 ? '∞' : $limit;
+                        $limit = $record->getPlanDetails()['limits']['conversation_quota'] ?? null;
+                        $limitText = $limit === null ? '∞' : $limit;
 
                         return "{$record->conversations_count} / {$limitText}";
                     }),
@@ -70,14 +70,9 @@ class CompaniesTable
                 TextColumn::make('revenue')
                     ->label(__('admin.est_revenue'))
                     ->state(function (Company $record) {
-                        $revenue = match ($record->plan) {
-                            'starter' => 49.00,
-                            'growth' => 149.00,
-                            'enterprise' => 499.00,
-                            default => 0.00,
-                        };
+                        $priceCents = $record->getPlanDetails()['price_cents'] ?? 0;
 
-                        return '$'.number_format($revenue, 2);
+                        return '$'.number_format($priceCents / 100, 2);
                     }),
                 TextColumn::make('margin')
                     ->label(__('admin.margin'))
@@ -97,12 +92,8 @@ class CompaniesTable
                         $whatsappCost = ($record->conversations_count ?? 0) * 0.03;
                         $cost = $inputCost + $outputCost + $whatsappCost;
 
-                        $revenue = match ($record->plan) {
-                            'starter' => 49.00,
-                            'growth' => 149.00,
-                            'enterprise' => 499.00,
-                            default => 0.00,
-                        };
+                        $priceCents = $record->getPlanDetails()['price_cents'] ?? 0;
+                        $revenue = $priceCents / 100;
 
                         $margin = $revenue - $cost;
 

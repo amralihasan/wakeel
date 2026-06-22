@@ -3,18 +3,23 @@
 namespace App\Filament\Resources\Subscriptions;
 
 use App\Filament\Resources\Subscriptions\Pages\ListSubscriptions;
+use App\Filament\Resources\Subscriptions\Pages\ViewSubscription;
 use App\Filament\Resources\Subscriptions\Tables\SubscriptionsTable;
+use App\Models\Subscription;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Model;
-use Laravel\Cashier\Subscription;
 
 class SubscriptionResource extends Resource
 {
     protected static ?string $model = Subscription::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-currency-dollar';
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.platform_management');
+    }
 
     public static function getNavigationLabel(): string
     {
@@ -31,30 +36,21 @@ class SubscriptionResource extends Resource
         return __('admin.subscription');
     }
 
-    public static function getNavigationGroup(): ?string
-    {
-        return __('admin.platform_management');
-    }
-
     public static function canCreate(): bool
-    {
-        return false;
-    }
-
-    public static function canEdit(Model $record): bool
     {
         return false;
     }
 
     public static function table(Table $table): Table
     {
-        return SubscriptionsTable::create($table);
+        return SubscriptionsTable::configure($table);
     }
 
     public static function getPages(): array
     {
         return [
             'index' => ListSubscriptions::route('/'),
+            'view' => ViewSubscription::route('/{record}'),
         ];
     }
 }

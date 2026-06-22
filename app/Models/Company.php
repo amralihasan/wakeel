@@ -2,11 +2,12 @@
 
 namespace App\Models;
 
+use App\Services\PlanCatalog;
 use Database\Factories\CompanyFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Config;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Company extends Model
 {
@@ -59,39 +60,56 @@ class Company extends Model
         return $this->hasMany(Conversation::class);
     }
 
+    public function subscription(): HasOne
+    {
+        return $this->hasOne(Subscription::class);
+    }
+
     public function getPlanDetails(): array
     {
-        $plans = Config::get('plans');
+        $catalog = app(PlanCatalog::class);
 
-        return $plans[$this->plan] ?? $plans['starter'];
+        if ($this->subscription) {
+            $plan = $catalog->find($this->subscription->plan_key);
+
+            if ($plan) {
+                return $plan;
+            }
+        }
+
+        return $catalog->find($this->plan) ?? $catalog->find('starter') ?? [];
     }
 
     public function hasReachedConversationsLimit(): bool
     {
-        $limit = $this->getPlanDetails()['conversations_limit'];
+        $plan = $this->getPlanDetails();
+        $limit = $plan['limits']['conversation_quota'] ?? null;
 
-        return $limit !== -1 && $this->conversations_count >= $limit;
+        return $limit !== null && $this->conversations_count >= $limit;
     }
 
     public function hasReachedUnitsLimit(): bool
     {
-        $limit = $this->getPlanDetails()['units_limit'];
+        $plan = $this->getPlanDetails();
+        $limit = $plan['limits']['units'] ?? null;
 
-        return $limit !== -1 && $this->units()->count() >= $limit;
+        return $limit !== null && $this->units()->count() >= $limit;
     }
 
     public function hasReachedRepsLimit(): bool
     {
-        $limit = $this->getPlanDetails()['reps_limit'];
+        $plan = $this->getPlanDetails();
+        $limit = $plan['limits']['reps'] ?? null;
 
-        return $limit !== -1 && $this->users()->where('role', 'sales_rep')->count() >= $limit;
+        return $limit !== null && $this->users()->where('role', 'sales_rep')->count() >= $limit;
     }
 
     public function hasReachedNumbersLimit(): bool
     {
-        $limit = $this->getPlanDetails()['numbers_limit'];
+        $plan = $this->getPlanDetails();
+        $limit = $plan['limits']['numbers'] ?? null;
 
-        return $limit !== -1 && filled($this->whatsapp_number);
+        return $limit !== null && filled($this->whatsapp_number);
     }
 
     public function ensureCurrentBillingCycle(): void

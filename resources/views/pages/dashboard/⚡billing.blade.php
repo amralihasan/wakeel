@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Company;
+use App\Services\PaymobService;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
@@ -14,7 +15,7 @@ new #[Title('billing.title')] class extends Component {
         return Auth::user()->company;
     }
 
-    public function checkout(string $planName, App\Services\PaymobService $paymob): void
+    public function checkout(string $planName, PaymobService $paymob): void
     {
         $company = $this->company;
         $plan = config("plans.{$planName}");
@@ -26,12 +27,14 @@ new #[Title('billing.title')] class extends Component {
         try {
             $user = Auth::user();
             $token = $paymob->getAuthToken();
-            
+
             $merchantOrderId = "company_{$company->id}_plan_{$planName}_" . time();
-            
+
+            $amount = ($plan['price_cents'] ?? 0) / 100;
+
             $paymobOrderId = $paymob->registerOrder(
                 $token,
-                $plan['amount'],
+                $amount,
                 $merchantOrderId
             );
 
@@ -42,7 +45,7 @@ new #[Title('billing.title')] class extends Component {
             $paymentKey = $paymob->getPaymentKey(
                 $token,
                 $paymobOrderId,
-                $plan['amount'],
+                $amount,
                 [
                     'email' => $company->email ?: $user->email,
                     'first_name' => $firstName,
@@ -91,11 +94,11 @@ new #[Title('billing.title')] class extends Component {
         <h2 class="text-lg font-semibold mb-4">{{ __('billing.usage_limits') }}</h2>
         <div class="grid gap-4 md:grid-cols-3">
             {{-- Conversations --}}
-            @php $convLimit = config("plans.{$this->company->plan}.conversations_limit"); @endphp
+            @php $planDetails = $this->company->getPlanDetails(); $convLimit = $planDetails['limits']['conversation_quota'] ?? null; @endphp
             <div class="rounded-lg border border-neutral-100 p-4 dark:border-neutral-800">
                 <p class="text-sm text-neutral-500">{{ __('billing.conversations') }}</p>
-                <p class="text-xl font-bold">{{ $this->company->conversations_count }} / {{ $convLimit === -1 ? __('billing.unlimited') : $convLimit }}</p>
-                @if ($convLimit !== -1)
+                <p class="text-xl font-bold">{{ $this->company->conversations_count }} / {{ $convLimit === null ? __('billing.unlimited') : $convLimit }}</p>
+                @if ($convLimit !== null)
                     <div class="mt-2 h-2 w-full rounded-full bg-neutral-100 dark:bg-neutral-800">
                         <div class="h-2 rounded-full {{ $this->company->hasReachedConversationsLimit() ? 'bg-red-500' : 'bg-indigo-500' }}" style="width: {{ min(100, round(($this->company->conversations_count / $convLimit) * 100)) }}%"></div>
                     </div>
@@ -103,11 +106,11 @@ new #[Title('billing.title')] class extends Component {
             </div>
 
             {{-- Units --}}
-            @php $unitsLimit = config("plans.{$this->company->plan}.units_limit"); $unitsCount = $this->company->units()->count(); @endphp
+            @php $unitsLimit = $planDetails['limits']['units'] ?? null; $unitsCount = $this->company->units()->count(); @endphp
             <div class="rounded-lg border border-neutral-100 p-4 dark:border-neutral-800">
                 <p class="text-sm text-neutral-500">{{ __('billing.units') }}</p>
-                <p class="text-xl font-bold">{{ $unitsCount }} / {{ $unitsLimit === -1 ? __('billing.unlimited') : $unitsLimit }}</p>
-                @if ($unitsLimit !== -1)
+                <p class="text-xl font-bold">{{ $unitsCount }} / {{ $unitsLimit === null ? __('billing.unlimited') : $unitsLimit }}</p>
+                @if ($unitsLimit !== null)
                     <div class="mt-2 h-2 w-full rounded-full bg-neutral-100 dark:bg-neutral-800">
                         <div class="h-2 rounded-full {{ $this->company->hasReachedUnitsLimit() ? 'bg-red-500' : 'bg-indigo-500' }}" style="width: {{ min(100, round(($unitsCount / $unitsLimit) * 100)) }}%"></div>
                     </div>
@@ -115,11 +118,11 @@ new #[Title('billing.title')] class extends Component {
             </div>
 
             {{-- Sales Reps --}}
-            @php $repsLimit = config("plans.{$this->company->plan}.reps_limit"); $repsCount = $this->company->users()->where('role', 'sales_rep')->count(); @endphp
+            @php $repsLimit = $planDetails['limits']['reps'] ?? null; $repsCount = $this->company->users()->where('role', 'sales_rep')->count(); @endphp
             <div class="rounded-lg border border-neutral-100 p-4 dark:border-neutral-800">
                 <p class="text-sm text-neutral-500">{{ __('billing.reps') }}</p>
-                <p class="text-xl font-bold">{{ $repsCount }} / {{ $repsLimit === -1 ? __('billing.unlimited') : $repsLimit }}</p>
-                @if ($repsLimit !== -1)
+                <p class="text-xl font-bold">{{ $repsCount }} / {{ $repsLimit === null ? __('billing.unlimited') : $repsLimit }}</p>
+                @if ($repsLimit !== null)
                     <div class="mt-2 h-2 w-full rounded-full bg-neutral-100 dark:bg-neutral-800">
                         <div class="h-2 rounded-full {{ $this->company->hasReachedRepsLimit() ? 'bg-red-500' : 'bg-indigo-500' }}" style="width: {{ min(100, round(($repsCount / $repsLimit) * 100)) }}%"></div>
                     </div>
@@ -133,11 +136,12 @@ new #[Title('billing.title')] class extends Component {
         @foreach (config('plans') as $key => $plan)
             <div class="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-zinc-900 {{ $this->company->plan === $key ? 'ring-2 ring-indigo-500' : '' }}">
                 <h3 class="text-lg font-bold">{{ __('billing.plan_' . $key) }}</h3>
+                <p class="text-2xl font-bold mt-2">{{ number_format(($plan['price_cents'] ?? 0) / 100, 2) }} {{ $plan['currency'] ?? 'EGP' }}<span class="text-sm font-normal text-neutral-500">/{{ __('billing.month') }}</span></p>
                 <ul class="mt-4 space-y-2 text-sm">
-                    <li>📞 {{ $plan['numbers_limit'] === -1 ? __('billing.unlimited') : __('billing.numbers_limit_desc', ['limit' => $plan['numbers_limit']]) }}</li>
-                    <li>🏠 {{ $plan['units_limit'] === -1 ? __('billing.unlimited') : __('billing.units_limit_desc', ['limit' => $plan['units_limit']]) }}</li>
-                    <li>👥 {{ $plan['reps_limit'] === -1 ? __('billing.unlimited') : __('billing.reps_limit_desc', ['limit' => $plan['reps_limit']]) }}</li>
-                    <li>💬 {{ $plan['conversations_limit'] === -1 ? __('billing.unlimited') : __('billing.conversations_limit_desc', ['limit' => number_format($plan['conversations_limit'])]) }}</li>
+                    <li>📞 {{ ($plan['limits']['numbers'] ?? null) === null ? __('billing.unlimited') : __('billing.numbers_limit_desc', ['limit' => $plan['limits']['numbers']]) }}</li>
+                    <li>🏠 {{ ($plan['limits']['units'] ?? null) === null ? __('billing.unlimited') : __('billing.units_limit_desc', ['limit' => $plan['limits']['units']]) }}</li>
+                    <li>👥 {{ ($plan['limits']['reps'] ?? null) === null ? __('billing.unlimited') : __('billing.reps_limit_desc', ['limit' => $plan['limits']['reps']]) }}</li>
+                    <li>💬 {{ ($plan['limits']['conversation_quota'] ?? null) === null ? __('billing.unlimited') : __('billing.conversations_limit_desc', ['limit' => number_format($plan['limits']['conversation_quota'])]) }}</li>
                 </ul>
                 @if ($this->company->plan !== $key)
                     <flux:button wire:click="checkout('{{ $key }}')" variant="primary" class="mt-4 w-full">{{ __('billing.subscribe_to', ['plan' => __('billing.plan_' . $key)]) }}</flux:button>

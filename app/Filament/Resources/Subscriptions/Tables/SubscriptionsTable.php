@@ -2,12 +2,15 @@
 
 namespace App\Filament\Resources\Subscriptions\Tables;
 
+use App\Enums\SubscriptionStatus;
+use App\Models\Subscription;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
 class SubscriptionsTable
 {
-    public static function create(Table $table): Table
+    public static function configure(Table $table): Table
     {
         return $table
             ->columns([
@@ -15,28 +18,59 @@ class SubscriptionsTable
                     ->label(__('admin.company'))
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('type')
+                TextColumn::make('plan_key')
                     ->label(__('admin.plan'))
                     ->badge()
                     ->formatStateUsing(fn ($state) => __('admin.'.$state)),
-                TextColumn::make('stripe_status')
-                    ->label(__('admin.stripe_status'))
+                TextColumn::make('status')
+                    ->label(__('admin.status'))
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'active' => 'success',
-                        'trialing' => 'info',
-                        'past_due' => 'warning',
-                        'canceled' => 'danger',
-                        'incomplete' => 'warning',
-                        'incomplete_expired' => 'danger',
-                        default => 'gray',
-                    }),
-                TextColumn::make('quantity')->label(__('admin.quantity')),
-                TextColumn::make('trial_ends_at')->label(__('admin.trial_ends'))->dateTime()->sortable(),
-                TextColumn::make('ends_at')->label(__('admin.ends_at'))->dateTime()->sortable(),
-                TextColumn::make('created_at')->label(__('admin.time'))->dateTime()->sortable(),
+                    ->color(fn (SubscriptionStatus $state): string => match ($state) {
+                        SubscriptionStatus::Active => 'success',
+                        SubscriptionStatus::Trialing => 'info',
+                        SubscriptionStatus::PastDue => 'warning',
+                        SubscriptionStatus::Canceled => 'danger',
+                        SubscriptionStatus::Expired => 'gray',
+                    })
+                    ->formatStateUsing(fn (SubscriptionStatus $state) => $state->label()),
+                TextColumn::make('payment_method')
+                    ->label(__('admin.payment_method'))
+                    ->badge()
+                    ->toggleable(),
+                TextColumn::make('current_period_end')
+                    ->label(__('admin.next_charge'))
+                    ->dateTime()
+                    ->sortable(),
+                TextColumn::make('mrr')
+                    ->label(__('admin.est_revenue'))
+                    ->money('USD')
+                    ->state(fn (Subscription $record) => $record->plan()['price_cents'] / 100 / 100),
+                TextColumn::make('created_at')
+                    ->label(__('admin.created_at'))
+                    ->dateTime()
+                    ->sortable(),
             ])
             ->defaultSort('created_at', 'desc')
-            ->filters([]);
+            ->filters([
+                SelectFilter::make('status')
+                    ->label(__('admin.status'))
+                    ->options(fn () => collect(SubscriptionStatus::cases())
+                        ->mapWithKeys(fn ($case) => [$case->value => $case->label()])
+                        ->toArray()),
+                SelectFilter::make('payment_method')
+                    ->label(__('admin.payment_method'))
+                    ->options([
+                        'card' => __('billing.card'),
+                        'wallet' => __('billing.wallet'),
+                        'valu' => __('billing.valu'),
+                    ]),
+                SelectFilter::make('plan_key')
+                    ->label(__('admin.plan'))
+                    ->options([
+                        'starter' => __('admin.starter'),
+                        'growth' => __('admin.growth'),
+                        'enterprise' => __('admin.enterprise'),
+                    ]),
+            ]);
     }
 }

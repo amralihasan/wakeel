@@ -9,4 +9,5 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('app:process-followups')->hourly();
+Schedule::command('billing:charge-due')->daily();
 Schedule::command('billing:rollover')->daily();

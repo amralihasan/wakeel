@@ -5,7 +5,6 @@ namespace App\Filament\Widgets;
 use App\Models\Company;
 use App\Models\Conversation;
 use Filament\Widgets\ChartWidget;
-use Illuminate\Support\Carbon;
 
 class GrowthChartWidget extends ChartWidget
 {
@@ -22,12 +21,12 @@ class GrowthChartWidget extends ChartWidget
     {
         $days = collect(range(29, 0))->map(fn (int $i) => now()->subDays($i)->startOfDay());
 
-        $labels = $days->map(fn (Carbon $d) => $d->format('M d'))->toArray();
+        $labels = $days->map(fn ($d) => $d->format('M d'))->toArray();
 
-        $signups = $days->map(fn (Carbon $d) => Company::whereDate('created_at', $d)->count())->toArray();
+        $signups = $days->map(fn ($d) => Company::whereDate('created_at', $d)->count())->toArray();
 
         $conversations = $days->map(
-            fn (Carbon $d) => Conversation::whereDate('created_at', $d)->count()
+            fn ($d) => Conversation::whereDate('created_at', $d)->count()
         )->toArray();
 
         return [

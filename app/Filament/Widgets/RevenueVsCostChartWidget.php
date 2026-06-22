@@ -5,7 +5,6 @@ namespace App\Filament\Widgets;
 use App\Models\Company;
 use App\Models\Message;
 use Filament\Widgets\ChartWidget;
-use Illuminate\Support\Carbon;
 
 class RevenueVsCostChartWidget extends ChartWidget
 {
@@ -22,21 +21,16 @@ class RevenueVsCostChartWidget extends ChartWidget
     {
         $months = collect(range(5, 0))->map(fn (int $i) => now()->subMonths($i));
 
-        $labels = $months->map(fn (Carbon $m) => $m->format('M Y'))->toArray();
+        $labels = $months->map(fn ($m) => $m->format('M Y'))->toArray();
 
-        $revenueData = $months->map(function (Carbon $month) {
+        $revenueData = $months->map(function ($month) {
             return Company::where('is_active', true)
                 ->whereDate('created_at', '<=', $month->endOfMonth())
                 ->get()
-                ->sum(fn (Company $c) => match ($c->plan) {
-                    'starter' => 49.00,
-                    'growth' => 149.00,
-                    'enterprise' => 499.00,
-                    default => 0.00,
-                });
+                ->sum(fn (Company $c) => ($c->getPlanDetails()['price_cents'] ?? 0) / 100);
         })->toArray();
 
-        $costData = $months->map(function (Carbon $month) {
+        $costData = $months->map(function ($month) {
             $tokens = Message::whereYear('created_at', $month->year)
                 ->whereMonth('created_at', $month->month)
                 ->selectRaw('SUM(input_tokens) as total_input, SUM(output_tokens) as total_output, COUNT(DISTINCT conversation_id) as conv_count')

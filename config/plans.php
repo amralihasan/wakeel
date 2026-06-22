@@ -2,27 +2,42 @@
 
 return [
     'starter' => [
+        'key' => 'starter',
         'name' => 'Starter',
-        'conversations_limit' => 500,
-        'numbers_limit' => 1,
-        'units_limit' => 10,
-        'reps_limit' => 1,
-        'amount' => env('PLAN_STARTER_PRICE', 500.00), // in EGP
+        'price_cents' => (int) env('PLAN_STARTER_PRICE_CENTS', 9900),
+        'currency' => 'EGP',
+        'period' => 'monthly',
+        'limits' => [
+            'conversation_quota' => 500,
+            'numbers' => 1,
+            'units' => 10,
+            'reps' => 1,
+        ],
     ],
     'growth' => [
+        'key' => 'growth',
         'name' => 'Growth',
-        'conversations_limit' => 2000,
-        'numbers_limit' => 1,
-        'units_limit' => -1,
-        'reps_limit' => 3,
-        'amount' => env('PLAN_GROWTH_PRICE', 1500.00), // in EGP
+        'price_cents' => (int) env('PLAN_GROWTH_PRICE_CENTS', 24900),
+        'currency' => 'EGP',
+        'period' => 'monthly',
+        'limits' => [
+            'conversation_quota' => 2000,
+            'numbers' => 1,
+            'units' => null,
+            'reps' => 3,
+        ],
     ],
     'enterprise' => [
+        'key' => 'enterprise',
         'name' => 'Enterprise',
-        'conversations_limit' => 10000,
-        'numbers_limit' => 2,
-        'units_limit' => -1,
-        'reps_limit' => -1,
-        'amount' => env('PLAN_ENTERPRISE_PRICE', 5000.00), // in EGP
+        'price_cents' => (int) env('PLAN_ENTERPRISE_PRICE_CENTS', 59900),
+        'currency' => 'EGP',
+        'period' => 'monthly',
+        'limits' => [
+            'conversation_quota' => 10000,
+            'numbers' => 2,
+            'units' => null,
+            'reps' => null,
+        ],
     ],
 ];

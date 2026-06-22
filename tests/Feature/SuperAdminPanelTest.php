@@ -108,7 +108,7 @@ it('renders the company resource list page with correct stats', function () {
         ->get('/admin/companies')
         ->assertSuccessful()
         ->assertSee('starter')
-        ->assertSee('49.00')
+        ->assertSee('99.00')
         ->assertSee('0.15'); // Est. Cost: $0.00025 + $0.0025 + (5 * 0.03 = $0.15) = $0.15275, formatted is $0.15
 });
 

@@ -17,12 +17,9 @@ class AdminOverviewWidget extends StatsOverviewWidget
         $activeSubscriptions = Company::where('is_active', true)->count();
 
         $mrr = Company::where('is_active', true)->get()->sum(function ($company) {
-            return match ($company->plan) {
-                'starter' => 49.00,
-                'growth' => 149.00,
-                'enterprise' => 499.00,
-                default => 0.00,
-            };
+            $plan = $company->getPlanDetails();
+
+            return ($plan['price_cents'] ?? 0) / 100;
         });
 
         $conversationsToday = Conversation::where('created_at', '>=', now()->startOfDay())->count();

@@ -47,12 +47,9 @@ class TopTenantsWidget extends BaseWidget
                 TextColumn::make('revenue')
                     ->label(__('admin.est_revenue'))
                     ->state(function (Company $record) {
-                        return '$'.number_format(match ($record->plan) {
-                            'starter' => 49.00,
-                            'growth' => 149.00,
-                            'enterprise' => 499.00,
-                            default => 0.00,
-                        }, 0);
+                        $priceCents = $record->getPlanDetails()['price_cents'] ?? 0;
+
+                        return '$'.number_format($priceCents / 100, 0);
                     }),
                 TextColumn::make('created_at')
                     ->label(__('admin.created_at'))
