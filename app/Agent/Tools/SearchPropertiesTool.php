@@ -3,6 +3,7 @@
 namespace App\Agent\Tools;
 
 use App\Models\Unit;
+use App\Services\Agent\RetrievedFacts;
 use Prism\Prism\Tool;
 
 class SearchPropertiesTool extends Tool
@@ -44,7 +45,7 @@ class SearchPropertiesTool extends Tool
             ->limit(3)
             ->get()
             ->map(fn (Unit $unit) => [
-                'id' => $unit->id,
+                'unit_id' => $unit->id,
                 'title' => $unit->title,
                 'rooms' => $unit->rooms,
                 'area' => $unit->area,
@@ -55,8 +56,19 @@ class SearchPropertiesTool extends Tool
                 'has_media' => $unit->media()->exists(),
             ]);
 
+        $facts = app(RetrievedFacts::class);
+
         if ($units->isEmpty()) {
-            return 'لا توجد وحدات مطابقة للخيارات المدخلة حالياً.';
+            $facts->clear();
+
+            return json_encode([
+                'status' => 'no_matches',
+                'message' => 'لا توجد وحدات مطابقة للخيارات المدخلة حالياً.',
+            ]);
+        }
+
+        foreach ($units as $unit) {
+            $facts->addUnit($unit['unit_id'], $unit);
         }
 
         return $units->toJson();

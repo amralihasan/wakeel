@@ -48,4 +48,5 @@ return [
     'sandbox_lead_name' => 'Platform Demo',
     'sandbox_reset_success' => 'Assistant sandbox reset successfully',
     'reset_sandbox_btn' => 'Reset Conversation',
+    'grounding_fallback' => 'Excuse me, let me check those details and get back to you.',
 ];

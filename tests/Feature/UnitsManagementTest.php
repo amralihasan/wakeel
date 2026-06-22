@@ -114,11 +114,13 @@ it('excludes non-available units from property search', function () {
 
     // Reserved is excluded
     $unit->update(['status' => UnitStatus::Reserved]);
-    expect($tool->__invoke(2000000))->toBe('لا توجد وحدات مطابقة للخيارات المدخلة حالياً.');
+    $resultReserved = json_decode($tool->__invoke(2000000), true);
+    expect($resultReserved)->toHaveKey('status', 'no_matches');
 
     // Sold is excluded
     $unit->update(['status' => UnitStatus::Sold]);
-    expect($tool->__invoke(2000000))->toBe('لا توجد وحدات مطابقة للخيارات المدخلة حالياً.');
+    $resultSold = json_decode($tool->__invoke(2000000), true);
+    expect($resultSold)->toHaveKey('status', 'no_matches');
 });
 
 it('handles media uploads and reordering', function () {

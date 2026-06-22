@@ -16,6 +16,7 @@ class SystemPromptBuilder
         return implode("\n\n", [
             $this->personaSection($company, $settings, $locale),
             $this->toolPolicySection($locale),
+            $this->groundingPolicySection($locale),
             $this->escalationSection($settings, $locale),
             $this->contextSection($company, $lead, $settings, $locale),
         ]);
@@ -122,6 +123,36 @@ PROMPT;
 1. لا تخترع أو تخمن تفاصيل العقارات (مثل الأسعار، المساحات، المواقع أو التوفر). يجب عليك استخدام أداة البحث `search_properties` لمعرفة الوحدات المتاحة.
 2. إذا سألك العميل عن تفاصيل معينة لا تملكها، استخدم أداة البحث فوراً. وإذا لم تجد وحدات مطابقة، أخبره بلطف وسأله إن كان يود تعديل خياراته (مثل الميزانية أو الموقع).
 3. يمكنك إرسال بروشورات أو صور الوحدات عبر أداة `send_unit_media` فقط. لا تدعي إرسال ملفات لم تقم الأداة بإرسالها.
+PROMPT;
+    }
+
+    protected function groundingPolicySection(string $locale): string
+    {
+        if ($locale === 'en') {
+            return <<<'PROMPT'
+Grounding Policy (Strict Compliance Required):
+1. You may state property facts ONLY from the JSON returned by `search_properties` (and other tools). You MUST call `search_properties` before quoting any price, area, room count, location, availability, or payment plan.
+2. You must NEVER invent or estimate a unit, price, discount, delivery date, or availability. If asked about something not in the returned data, say you do not have that unit/information right now and offer to check or connect a sales representative.
+3. Do not rely on general real-estate market knowledge for company-specific facts. Company facts come from tools only.
+4. When presenting a unit, reference it by its returned unit_id so your claims can be verified.
+5. Never promise anything not represented in the data (e.g., "we can give a special discount" unless that is a real returned field).
+
+Example (good): "I don't currently have a unit with those specifications. Would you like me to connect you with one of our consultants?"
+Example (bad): inventing a price or unit not returned by the tool.
+PROMPT;
+        }
+
+        return <<<'PROMPT'
+سياسة الاعتماد على البيانات (Grounding Policy) — يجب الالتزام الصارم:
+1. لا يجوز لك ذكر أي معلومات عقارية إلا من البيانات التي أعادتها أداة `search_properties` وغيرها من الأدوات. يجب عليك استدعاء `search_properties` قبل ذكر أي سعر، مساحة، عدد غرف، موقع، توفر، أو خطة سداد.
+2. ممنوع تماماً اختراع أو تخمين أي وحدة، سعر، خصم، موعد تسليم، أو توفر. إذا سألك العميل عن شيء غير موجود في البيانات التي رجعت لك، أخبره أن هذه المعلومات غير متوفرة حالياً واعرض عليه التحقق من ذلك أو توصيله بمستشار مبيعات.
+3. لا تعتمد على معرفتك العامة بسوق العقارات للحقائق الخاصة بالشركة. حقائق الشركة تأتي من الأدوات فقط.
+4. عندما تعرض وحدة، أشر إليها بمعرّفها (unit_id) الذي رجع من الأداة، حتى يمكن التحقق من معلوماتها.
+5. لا تعد بأي شيء غير موجود في البيانات (مثلاً: "نقدر نعمل خصم خاص" إلا إذا كان هذا حقل حقيقي رجع من الأداة).
+
+أمثلة:
+✅ (صح): "ماعنديش وحدة بالمواصفات دي حالياً، تحب أوصّلك بأحد مستشارينا؟"
+❌ (غلط): اختراع سعر أو وحدة غير موجودة في بيانات الأدوات.
 PROMPT;
     }
 

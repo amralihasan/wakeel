@@ -85,7 +85,9 @@ it('returns no matches message when no units found', function () {
     $tool = new SearchPropertiesTool($company->id, $lead->id, '+201234567890');
     $result = $tool->__invoke(500000);
 
-    expect($result)->toBe('لا توجد وحدات مطابقة للخيارات المدخلة حالياً.');
+    $decoded = json_decode($result, true);
+
+    expect($decoded)->toHaveKey('status', 'no_matches');
 });
 
 it('sends unit media and dispatches jobs', function () {
@@ -128,8 +130,8 @@ it('calculates monthly installment correctly', function () {
     $tool = new CalculateInstallmentTool($company->id, $lead->id, '+201234567890');
     $result = json_decode($tool->__invoke(1000000, 200000, 10), true);
 
-    expect($result['monthly_payment'])->toBe(6667)
-        ->and($result['message'])->toContain('جنيه مصري');
+    expect($result['monthly_payment'])->toBe(6666.67)
+        ->and($result['formatted'])->toContain('جنيه مصري');
 });
 
 it('books a visit and dispatches VisitBooked event', function () {

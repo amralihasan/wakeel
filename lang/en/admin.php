@@ -83,6 +83,17 @@ return [
     'fallback_enabled' => 'Fallback Enabled',
     'fallback_ai_model' => 'Fallback AI Model',
     'ai_model_updated' => 'AI model updated from :before to :after',
+    'grounding_violations' => 'Grounding Violations',
+    'grounding_violation' => 'Grounding Violation',
+    'model_used' => 'Model Used',
+    'original_text' => 'Original Text',
+    'safe_fallback' => 'Safe Fallback',
+    'action_taken' => 'Action Taken',
+    'violation_reason' => 'Violation Reason',
+    'retrieved_facts' => 'Retrieved Facts',
+    'blocked' => 'Blocked',
+    'regenerated' => 'Regenerated',
+    'fallback_sent' => 'Fallback Sent',
 
     // Handoffs
     'handoffs' => 'Human Escalation Claims',

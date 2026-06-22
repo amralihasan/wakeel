@@ -2,6 +2,7 @@
 
 namespace App\Agent\Tools;
 
+use App\Services\Agent\RetrievedFacts;
 use Prism\Prism\Tool;
 
 class CalculateInstallmentTool extends Tool
@@ -13,21 +14,30 @@ class CalculateInstallmentTool extends Tool
     ) {
         $this
             ->as('calculate_installment')
-            ->for('احسب قيمة القسط الشهري المتوقع للوحدة بناءً على السعر ومقدم الحجز وفترة التقسيط')
-            ->withNumberParameter('price', 'السعر الإجمالي للوحدة بالجنيه المصري', required: true)
-            ->withNumberParameter('down_payment', 'قيمة مقدم الحجز بالجنيه المصري', required: true)
+            ->for('احسب قيمة القسط الشهري بناءً على سعر الوحدة، الدفعة المقدمة، وعدد سنوات التقسيط')
+            ->withNumberParameter('price', 'سعر الوحدة بالجنيه المصري', required: true)
+            ->withNumberParameter('down_payment', 'قيمة الدفعة المقدمة بالجنيه المصري', required: true)
             ->withNumberParameter('years', 'عدد سنوات التقسيط', required: true)
             ->using($this);
     }
 
     public function __invoke(int $price, int $down_payment, int $years): string
     {
-        $monthlyPayment = (int) round(($price - $down_payment) / ($years * 12));
-        $formatted = number_format($monthlyPayment);
+        $remaining = $price - $down_payment;
+
+        if ($remaining <= 0 || $years <= 0) {
+            return json_encode([
+                'error' => 'قيم الإدخال غير صالحة. يجب أن يكون المبلغ المتبقي وعدد السنوات أكبر من صفر.',
+            ]);
+        }
+
+        $monthlyPayment = round($remaining / ($years * 12), 2);
+
+        app(RetrievedFacts::class)->addInstallmentResult($monthlyPayment);
 
         return json_encode([
             'monthly_payment' => $monthlyPayment,
-            'message' => "القسط الشهري المتوقع هو {$formatted} جنيه مصري شهرياً على مدار {$years} سنوات.",
+            'formatted' => number_format($monthlyPayment, 2).' جنيه مصري شهرياً',
         ]);
     }
 }

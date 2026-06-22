@@ -16,6 +16,8 @@ use App\Listeners\HandleSubscriptionActivated;
 use App\Listeners\HandleSubscriptionCanceled;
 use App\Listeners\HandleSubscriptionExpired;
 use App\Listeners\HandleSubscriptionPastDue;
+use App\Services\Agent\GroundingVerifier;
+use App\Services\Agent\RetrievedFacts;
 use App\Services\Agent\SystemPromptBuilder;
 use App\Services\AiModelRegistry;
 use App\Services\AiModelResolver;
@@ -43,6 +45,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(SubscriptionManager::class);
         $this->app->singleton(AiModelRegistry::class);
         $this->app->singleton(AiModelResolver::class);
+        $this->app->singleton(RetrievedFacts::class);
+        $this->app->singleton(GroundingVerifier::class);
     }
 
     public function boot(): void

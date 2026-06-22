@@ -48,4 +48,5 @@ return [
     'sandbox_lead_name' => 'تجربة المنصة',
     'sandbox_reset_success' => 'تم إعادة تعيين محاكاة المساعد بنجاح',
     'reset_sandbox_btn' => 'إعادة تعيين المحادثة',
+    'grounding_fallback' => 'اسمحلي أتأكد من التفاصيل دي وأرجعلك.',
 ];

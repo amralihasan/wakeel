@@ -18,18 +18,22 @@ use App\Models\Message;
 use App\Services\AiModelRegistry;
 use App\Services\AiModelResolver;
 use App\Services\Leads\LeadScoringService;
+use App\Services\ModelChoice;
 use App\Services\WhatsApp\ConversationSession;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Prism\Prism\Facades\Prism;
 use Prism\Prism\ValueObjects\Messages\AssistantMessage;
 use Prism\Prism\ValueObjects\Messages\UserMessage;
+use Throwable;
 
 class AgentRunner
 {
     public function __construct(
         protected AiModelResolver $modelResolver,
         protected AiModelRegistry $modelRegistry,
+        protected RetrievedFacts $retrievedFacts,
+        protected GroundingVerifier $groundingVerifier,
     ) {}
 
     public function handle(Company $company, string $customerPhone, string $incomingText): void
@@ -54,6 +58,8 @@ class AgentRunner
 
     protected function execute(Company $company, string $customerPhone, string $incomingText): void
     {
+        $this->retrievedFacts->clear();
+
         $lead = Lead::firstOrCreate(
             ['company_id' => $company->id, 'customer_phone' => $customerPhone],
             ['name' => null, 'status' => 'new', 'source' => 'whatsapp'],
@@ -89,72 +95,39 @@ class AgentRunner
         $costUsd = null;
         $usedFallback = false;
 
-        try {
-            $response = Prism::text()
-                ->using($modelChoice->provider, $modelChoice->model)
-                ->withSystemPrompt($systemPrompt)
-                ->withMessages($prismMessages)
-                ->withTools($tools)
-                ->withMaxSteps(5)
-                ->asText();
+        $assistantText = $this->runPrismWithFallback(
+            company: $company,
+            customerPhone: $customerPhone,
+            lead: $lead,
+            modelChoice: $modelChoice,
+            systemPrompt: $systemPrompt,
+            prismMessages: $prismMessages,
+            tools: $tools,
+            inputTokens: $inputTokens,
+            outputTokens: $outputTokens,
+            actualModel: $actualModel,
+            usedFallback: $usedFallback,
+        );
 
-            $assistantText = $response->text;
-            $inputTokens = $response->usage->inputTokens ?? null;
-            $outputTokens = $response->usage->outputTokens ?? null;
+        $verified = $this->verifyAndRegenerateIfNeeded(
+            company: $company,
+            conversation: $conversation,
+            lead: $lead,
+            modelChoice: $modelChoice,
+            systemPrompt: $systemPrompt,
+            prismMessages: $prismMessages,
+            tools: $tools,
+            assistantText: $assistantText,
+            inputTokens: $inputTokens,
+            outputTokens: $outputTokens,
+            actualModel: $actualModel,
+            usedFallback: $usedFallback,
+        );
 
-            $this->logTokenAnomalies($company, $customerPhone, $inputTokens, $outputTokens);
-
-            $this->applyToolSignals($lead, $response);
-        } catch (\Throwable $e) {
-            Log::error('AgentRunner Prism error', [
-                'company_id' => $company->id,
-                'customer_phone' => $customerPhone,
-                'model' => $modelChoice->model,
-                'provider' => $modelChoice->provider,
-                'error' => $e->getMessage(),
-            ]);
-
-            $fallback = $this->modelResolver->fallbackFor($modelChoice);
-
-            if ($fallback !== null) {
-                Log::info('AgentRunner falling back to fallback model', [
-                    'company_id' => $company->id,
-                    'fallback_model' => $fallback->model,
-                    'fallback_provider' => $fallback->provider,
-                ]);
-
-                try {
-                    $response = Prism::text()
-                        ->using($fallback->provider, $fallback->model)
-                        ->withSystemPrompt($systemPrompt)
-                        ->withMessages($prismMessages)
-                        ->withTools($tools)
-                        ->withMaxSteps(3)
-                        ->asText();
-
-                    $assistantText = $response->text;
-                    $inputTokens = $response->usage->inputTokens ?? null;
-                    $outputTokens = $response->usage->outputTokens ?? null;
-                    $actualModel = $fallback->model;
-                    $usedFallback = true;
-
-                    $this->logTokenAnomalies($company, $customerPhone, $inputTokens, $outputTokens);
-                    $this->applyToolSignals($lead, $response);
-                } catch (\Throwable $fallbackError) {
-                    Log::error('AgentRunner fallback also failed', [
-                        'company_id' => $company->id,
-                        'customer_phone' => $customerPhone,
-                        'error' => $fallbackError->getMessage(),
-                    ]);
-
-                    $locale = $lead->locale ?? $company->default_locale ?? 'ar';
-                    $assistantText = __('bot.fallback_error', [], $locale);
-                }
-            } else {
-                $locale = $lead->locale ?? $company->default_locale ?? 'ar';
-                $assistantText = __('bot.fallback_error', [], $locale);
-            }
-        }
+        $assistantText = $verified['text'];
+        $inputTokens = $verified['input_tokens'];
+        $outputTokens = $verified['output_tokens'];
+        $actualModel = $verified['actual_model'];
 
         if (isset($assistantText) && $inputTokens !== null && $outputTokens !== null) {
             $inputCostPerMtok = $this->modelRegistry->costPerMtok($actualModel, 'input');
@@ -188,6 +161,208 @@ class AgentRunner
         $conversation->touch();
 
         $session->touch();
+    }
+
+    protected function runPrismWithFallback(
+        Company $company,
+        string $customerPhone,
+        Lead $lead,
+        ModelChoice $modelChoice,
+        string $systemPrompt,
+        array $prismMessages,
+        array $tools,
+        ?int &$inputTokens,
+        ?int &$outputTokens,
+        ?string &$actualModel,
+        bool &$usedFallback,
+    ): string {
+        try {
+            $response = Prism::text()
+                ->using($modelChoice->provider, $modelChoice->model)
+                ->withSystemPrompt($systemPrompt)
+                ->withMessages($prismMessages)
+                ->withTools($tools)
+                ->withMaxSteps(5)
+                ->asText();
+
+            $text = $response->text;
+            $inputTokens = $response->usage->inputTokens ?? null;
+            $outputTokens = $response->usage->outputTokens ?? null;
+
+            $this->logTokenAnomalies($company, $customerPhone, $inputTokens, $outputTokens);
+            $this->applyToolSignals($lead, $response);
+
+            return $text;
+        } catch (Throwable $e) {
+            Log::error('AgentRunner Prism error', [
+                'company_id' => $company->id,
+                'customer_phone' => $customerPhone,
+                'model' => $modelChoice->model,
+                'provider' => $modelChoice->provider,
+                'error' => $e->getMessage(),
+            ]);
+
+            $fallback = $this->modelResolver->fallbackFor($modelChoice);
+
+            if ($fallback !== null) {
+                Log::info('AgentRunner falling back to fallback model', [
+                    'company_id' => $company->id,
+                    'fallback_model' => $fallback->model,
+                    'fallback_provider' => $fallback->provider,
+                ]);
+
+                try {
+                    $response = Prism::text()
+                        ->using($fallback->provider, $fallback->model)
+                        ->withSystemPrompt($systemPrompt)
+                        ->withMessages($prismMessages)
+                        ->withTools($tools)
+                        ->withMaxSteps(3)
+                        ->asText();
+
+                    $text = $response->text;
+                    $inputTokens = $response->usage->inputTokens ?? null;
+                    $outputTokens = $response->usage->outputTokens ?? null;
+                    $actualModel = $fallback->model;
+                    $usedFallback = true;
+
+                    $this->logTokenAnomalies($company, $customerPhone, $inputTokens, $outputTokens);
+                    $this->applyToolSignals($lead, $response);
+
+                    return $text;
+                } catch (Throwable $fallbackError) {
+                    Log::error('AgentRunner fallback also failed', [
+                        'company_id' => $company->id,
+                        'customer_phone' => $customerPhone,
+                        'error' => $fallbackError->getMessage(),
+                    ]);
+                }
+            }
+
+            $locale = $lead->locale ?? $company->default_locale ?? 'ar';
+
+            return __('bot.fallback_error', [], $locale);
+        }
+    }
+
+    protected function verifyAndRegenerateIfNeeded(
+        Company $company,
+        Conversation $conversation,
+        Lead $lead,
+        ModelChoice $modelChoice,
+        string $systemPrompt,
+        array $prismMessages,
+        array $tools,
+        string $assistantText,
+        ?int &$inputTokens,
+        ?int &$outputTokens,
+        ?string &$actualModel,
+        bool &$usedFallback,
+    ): array {
+        $violation = $this->groundingVerifier->verify($assistantText);
+
+        if ($violation === null) {
+            return [
+                'text' => $assistantText,
+                'input_tokens' => $inputTokens,
+                'output_tokens' => $outputTokens,
+                'actual_model' => $actualModel,
+            ];
+        }
+
+        Log::warning('Grounding violation detected, regenerating', [
+            'company_id' => $company->id,
+            'conversation_id' => $conversation->id,
+            'model' => $actualModel,
+            'reason' => $violation,
+        ]);
+
+        $this->groundingVerifier->logViolation(
+            company: $company,
+            conversation: $conversation,
+            modelUsed: $actualModel,
+            originalText: $assistantText,
+            safeFallbackText: null,
+            actionTaken: 'regenerated',
+            violationReason: $violation,
+        );
+
+        $this->retrievedFacts->clear();
+
+        $correctiveInstruction = new UserMessage(
+            'استخدم فقط البيانات التي رجعت من الأدوات؛ لا تذكر أي سعر أو وحدة غير موجودة. التزم بالبيانات الحقيقية فقط.'
+        );
+
+        $regeneratedMessages = array_merge($prismMessages, [
+            new AssistantMessage($assistantText),
+            $correctiveInstruction,
+        ]);
+
+        try {
+            $response = Prism::text()
+                ->using($modelChoice->provider, $modelChoice->model)
+                ->withSystemPrompt($systemPrompt)
+                ->withMessages($regeneratedMessages)
+                ->withTools($tools)
+                ->withMaxSteps(3)
+                ->asText();
+
+            $regeneratedText = $response->text;
+            $inputTokens = ($inputTokens ?? 0) + ($response->usage->inputTokens ?? 0);
+            $outputTokens = ($outputTokens ?? 0) + ($response->usage->outputTokens ?? 0);
+
+            $retryViolation = $this->groundingVerifier->verify($regeneratedText);
+
+            if ($retryViolation === null) {
+                return [
+                    'text' => $regeneratedText,
+                    'input_tokens' => $inputTokens,
+                    'output_tokens' => $outputTokens,
+                    'actual_model' => $actualModel,
+                ];
+            }
+
+            Log::warning('Regeneration also failed grounding check, sending safe fallback', [
+                'company_id' => $company->id,
+                'conversation_id' => $conversation->id,
+                'reason' => $retryViolation,
+            ]);
+
+            $locale = $lead->locale ?? $company->default_locale ?? 'ar';
+            $safeFallback = __('bot.grounding_fallback', [], $locale);
+
+            $this->groundingVerifier->logViolation(
+                company: $company,
+                conversation: $conversation,
+                modelUsed: $actualModel,
+                originalText: $assistantText,
+                safeFallbackText: $safeFallback,
+                actionTaken: 'fallback_sent',
+                violationReason: 'Regeneration failed: '.$retryViolation,
+            );
+
+            return [
+                'text' => $safeFallback,
+                'input_tokens' => $inputTokens,
+                'output_tokens' => $outputTokens,
+                'actual_model' => $actualModel,
+            ];
+        } catch (Throwable $e) {
+            Log::error('AgentRunner regeneration Prism error', [
+                'company_id' => $company->id,
+                'conversation_id' => $conversation->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            $locale = $lead->locale ?? $company->default_locale ?? 'ar';
+
+            return [
+                'text' => __('bot.grounding_fallback', [], $locale),
+                'input_tokens' => $inputTokens,
+                'output_tokens' => $outputTokens,
+                'actual_model' => $actualModel,
+            ];
+        }
     }
 
     protected function buildMessageHistory(ConversationSession $session, string $incomingText): array
@@ -266,6 +441,8 @@ class AgentRunner
 
     protected function executeFollowUp(Company $company, string $customerPhone): string
     {
+        $this->retrievedFacts->clear();
+
         $lead = Lead::where('company_id', $company->id)
             ->where('customer_phone', $customerPhone)
             ->first();
@@ -302,6 +479,15 @@ class AgentRunner
                 : new UserMessage($content);
         }
 
+        $tools = [
+            new SearchPropertiesTool($company->id, $lead->id, $customerPhone),
+            new SendUnitMediaTool($company->id, $lead->id, $customerPhone),
+            new CalculateInstallmentTool($company->id, $lead->id, $customerPhone),
+            new BookVisitTool($company->id, $lead->id, $customerPhone),
+            new QualifyLeadTool($company->id, $lead->id, $customerPhone),
+            new EscalateToAgentTool($company->id, $lead->id, $customerPhone),
+        ];
+
         $locale = $lead->locale ?? $company->default_locale ?? 'ar';
         $followUpInstruction = __('bot.followup_instruction', [], $locale);
 
@@ -317,6 +503,7 @@ class AgentRunner
                 ->using($modelChoice->provider, $modelChoice->model)
                 ->withSystemPrompt($systemPrompt)
                 ->withMessages($messages)
+                ->withTools($tools)
                 ->withMaxSteps(3)
                 ->asText();
 
@@ -325,7 +512,7 @@ class AgentRunner
             $outputTokens = $response->usage->outputTokens ?? null;
 
             $this->logTokenAnomalies($company, $customerPhone, $inputTokens, $outputTokens);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::error('AgentRunner Prism follow-up error', [
                 'company_id' => $company->id,
                 'customer_phone' => $customerPhone,
@@ -336,6 +523,28 @@ class AgentRunner
 
             $locale = $lead->locale ?? $company->default_locale ?? 'ar';
             $assistantText = __('bot.default_followup_message', [], $locale);
+        }
+
+        $violation = $this->groundingVerifier->verify($assistantText);
+
+        if ($violation !== null) {
+            Log::warning('Grounding violation in follow-up, sending safe fallback', [
+                'company_id' => $company->id,
+                'conversation_id' => $conversation->id,
+                'reason' => $violation,
+            ]);
+
+            $this->groundingVerifier->logViolation(
+                company: $company,
+                conversation: $conversation,
+                modelUsed: $actualModel,
+                originalText: $assistantText,
+                safeFallbackText: __('bot.grounding_fallback', [], $locale),
+                actionTaken: 'fallback_sent',
+                violationReason: $violation,
+            );
+
+            $assistantText = __('bot.grounding_fallback', [], $locale);
         }
 
         if (isset($assistantText) && $inputTokens !== null && $outputTokens !== null) {
