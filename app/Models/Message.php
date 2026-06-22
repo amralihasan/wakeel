@@ -29,6 +29,8 @@ class Message extends Model
         'created_at',
         'input_tokens',
         'output_tokens',
+        'model_used',
+        'cost_usd',
     ];
 
     protected function casts(): array
@@ -39,6 +41,7 @@ class Message extends Model
             'created_at' => 'datetime',
             'input_tokens' => 'integer',
             'output_tokens' => 'integer',
+            'cost_usd' => 'float',
         ];
     }
 

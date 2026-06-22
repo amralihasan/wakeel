@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\AdminAuditLog;
 use App\Models\PlatformSetting;
+use App\Services\AiModelRegistry;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
@@ -42,25 +43,56 @@ class SettingsPage extends Page
 
     public function mount(): void
     {
+        $registry = app(AiModelRegistry::class);
+        $modelDefaults = [];
+
+        foreach ($registry->all() as $key => $model) {
+            $modelDefaults["model_enabled_{$key}"] = PlatformSetting::get("model_enabled_{$key}", true);
+        }
+
         $this->form->fill([
             'default_plan' => PlatformSetting::get('default_plan', 'starter'),
             'max_conversations_per_tenant' => PlatformSetting::get('max_conversations_per_tenant', 1000),
             'max_messages_per_conversation' => PlatformSetting::get('max_messages_per_conversation', 100),
-            'claude_model' => PlatformSetting::get('claude_model', 'claude-sonnet-4-20250514'),
             'max_tokens_per_response' => PlatformSetting::get('max_tokens_per_response', 1024),
             'whatsapp_cost_per_message' => PlatformSetting::get('whatsapp_cost_per_message', 0.005),
-            'ai_cost_per_token_in' => PlatformSetting::get('ai_cost_per_token_in', 0.000003),
-            'ai_cost_per_token_out' => PlatformSetting::get('ai_cost_per_token_out', 0.000015),
+            'default_ai_model' => PlatformSetting::get('default_ai_model', $registry->default()),
+            'fallback_enabled' => PlatformSetting::get('fallback_enabled', true),
+            'fallback_ai_model' => PlatformSetting::get('fallback_ai_model', $registry->fallback()),
             'maintenance_mode' => PlatformSetting::get('maintenance_mode', false),
             'track_analytics' => PlatformSetting::get('track_analytics', true),
             'allow_registration' => PlatformSetting::get('allow_registration', true),
             'default_locale' => PlatformSetting::get('default_locale', 'ar'),
             'billing_grace_days' => PlatformSetting::get('billing_grace_days', 3),
+            ...$modelDefaults,
         ]);
     }
 
     public function form(Schema $schema): Schema
     {
+        $registry = app(AiModelRegistry::class);
+        $models = $registry->all();
+        $selectableOptions = [];
+
+        foreach ($models as $key => $model) {
+            if (($model['enabled'] ?? true) && ($model['supports_tools'] ?? false)) {
+                $selectableOptions[$key] = $model['label'];
+            }
+        }
+
+        $allModelOptions = [];
+        foreach ($models as $key => $model) {
+            $allModelOptions[$key] = $model['label'];
+        }
+
+        $modelToggles = [];
+        foreach ($models as $key => $model) {
+            $modelToggles[] = Toggle::make("model_enabled_{$key}")
+                ->label($model['label'])
+                ->helperText($model['provider'].' · Input: $'.number_format($model['input_cost_per_mtok'], 2).'/M tok · Output: $'.number_format($model['output_cost_per_mtok'], 2).'/M tok')
+                ->inline();
+        }
+
         return $schema
             ->components([
                 Tabs::make('Settings')
@@ -88,23 +120,24 @@ class SettingsPage extends Page
                         Tab::make(__('admin.ai_configuration'))
                             ->icon('heroicon-o-cpu-chip')
                             ->schema([
-                                TextInput::make('claude_model')
-                                    ->label(__('admin.claude_model'))
+                                ...$modelToggles,
+                                Select::make('default_ai_model')
+                                    ->label(__('admin.default_ai_model'))
+                                    ->options($selectableOptions)
+                                    ->helperText('Default model for all companies (selectable models only)')
                                     ->required(),
+                                Toggle::make('fallback_enabled')
+                                    ->label(__('admin.fallback_enabled'))
+                                    ->helperText('Automatically retry with fallback model if primary fails')
+                                    ->inline(),
+                                Select::make('fallback_ai_model')
+                                    ->label(__('admin.fallback_ai_model'))
+                                    ->options($allModelOptions)
+                                    ->helperText('Model to use when primary fails'),
                                 TextInput::make('max_tokens_per_response')
                                     ->label(__('admin.max_tokens_per_response'))
                                     ->numeric()
                                     ->required(),
-                                TextInput::make('ai_cost_per_token_in')
-                                    ->label(__('admin.ai_cost_per_token_in'))
-                                    ->numeric()
-                                    ->required()
-                                    ->step(0.000001),
-                                TextInput::make('ai_cost_per_token_out')
-                                    ->label(__('admin.ai_cost_per_token_out'))
-                                    ->numeric()
-                                    ->required()
-                                    ->step(0.000001),
                                 TextInput::make('whatsapp_cost_per_message')
                                     ->label(__('admin.whatsapp_cost_per_message'))
                                     ->numeric()

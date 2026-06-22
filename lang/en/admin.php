@@ -76,6 +76,13 @@ return [
     'changed' => 'Changed',
     'confirm_mark_paid' => 'Mark this subscription as paid for the current period?',
     'billing_grace_days' => 'Billing Grace Days',
+    'ai_model' => 'AI Model',
+    'use_platform_default' => 'Use Platform Default',
+    'ai_model_help' => 'Override the AI model for this company. Leave as default to use the platform-wide setting.',
+    'default_ai_model' => 'Default AI Model',
+    'fallback_enabled' => 'Fallback Enabled',
+    'fallback_ai_model' => 'Fallback AI Model',
+    'ai_model_updated' => 'AI model updated from :before to :after',
 
     // Handoffs
     'handoffs' => 'Human Escalation Claims',

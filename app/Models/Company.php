@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Auth;
 
 class Company extends Model
 {
@@ -21,6 +22,7 @@ class Company extends Model
         'email',
         'phone',
         'plan',
+        'ai_model',
         'whatsapp_number',
         'dialog360_channel_id',
         'bot_settings',
@@ -63,6 +65,23 @@ class Company extends Model
     public function subscription(): HasOne
     {
         return $this->hasOne(Subscription::class);
+    }
+
+    protected static function booted(): void
+    {
+        static::saved(function (Company $company) {
+            if ($company->wasChanged('ai_model') && Auth::check() && Auth::user()->is_super_admin) {
+                AdminAuditLog::record(
+                    Auth::user(),
+                    'company_ai_model_updated',
+                    'company',
+                    $company->id,
+                    "AI model updated for {$company->name}",
+                    ['ai_model' => $company->getOriginal('ai_model')],
+                    ['ai_model' => $company->ai_model],
+                );
+            }
+        });
     }
 
     public function getPlanDetails(): array

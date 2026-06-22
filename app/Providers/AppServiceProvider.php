@@ -17,6 +17,8 @@ use App\Listeners\HandleSubscriptionCanceled;
 use App\Listeners\HandleSubscriptionExpired;
 use App\Listeners\HandleSubscriptionPastDue;
 use App\Services\Agent\SystemPromptBuilder;
+use App\Services\AiModelRegistry;
+use App\Services\AiModelResolver;
 use App\Services\ConversationUsage;
 use App\Services\CurrentCompany;
 use App\Services\PlanCatalog;
@@ -39,6 +41,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(PlanGate::class);
         $this->app->singleton(ConversationUsage::class);
         $this->app->singleton(SubscriptionManager::class);
+        $this->app->singleton(AiModelRegistry::class);
+        $this->app->singleton(AiModelResolver::class);
     }
 
     public function boot(): void

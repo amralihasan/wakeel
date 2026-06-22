@@ -15,6 +15,8 @@ use App\Models\Company;
 use App\Models\Conversation;
 use App\Models\Lead;
 use App\Models\Message;
+use App\Services\AiModelRegistry;
+use App\Services\AiModelResolver;
 use App\Services\Leads\LeadScoringService;
 use App\Services\WhatsApp\ConversationSession;
 use Illuminate\Support\Facades\Cache;
@@ -25,6 +27,11 @@ use Prism\Prism\ValueObjects\Messages\UserMessage;
 
 class AgentRunner
 {
+    public function __construct(
+        protected AiModelResolver $modelResolver,
+        protected AiModelRegistry $modelRegistry,
+    ) {}
+
     public function handle(Company $company, string $customerPhone, string $incomingText): void
     {
         $lock = Cache::lock("agent_runner:{$company->id}:{$customerPhone}", 30);
@@ -57,6 +64,8 @@ class AgentRunner
             ['lead_id' => $lead->id, 'mode' => 'bot'],
         );
 
+        $modelChoice = $this->modelResolver->for($company);
+
         $systemPrompt = app(SystemPromptBuilder::class)->build($company, $lead);
 
         $session = app(ConversationSession::class);
@@ -76,10 +85,13 @@ class AgentRunner
 
         $inputTokens = null;
         $outputTokens = null;
+        $actualModel = $modelChoice->model;
+        $costUsd = null;
+        $usedFallback = false;
 
         try {
             $response = Prism::text()
-                ->using(config('prism.default_provider'), config('prism.default_model'))
+                ->using($modelChoice->provider, $modelChoice->model)
                 ->withSystemPrompt($systemPrompt)
                 ->withMessages($prismMessages)
                 ->withTools($tools)
@@ -97,11 +109,58 @@ class AgentRunner
             Log::error('AgentRunner Prism error', [
                 'company_id' => $company->id,
                 'customer_phone' => $customerPhone,
+                'model' => $modelChoice->model,
+                'provider' => $modelChoice->provider,
                 'error' => $e->getMessage(),
             ]);
 
-            $locale = $lead->locale ?? $company->default_locale ?? 'ar';
-            $assistantText = __('bot.fallback_error', [], $locale);
+            $fallback = $this->modelResolver->fallbackFor($modelChoice);
+
+            if ($fallback !== null) {
+                Log::info('AgentRunner falling back to fallback model', [
+                    'company_id' => $company->id,
+                    'fallback_model' => $fallback->model,
+                    'fallback_provider' => $fallback->provider,
+                ]);
+
+                try {
+                    $response = Prism::text()
+                        ->using($fallback->provider, $fallback->model)
+                        ->withSystemPrompt($systemPrompt)
+                        ->withMessages($prismMessages)
+                        ->withTools($tools)
+                        ->withMaxSteps(3)
+                        ->asText();
+
+                    $assistantText = $response->text;
+                    $inputTokens = $response->usage->inputTokens ?? null;
+                    $outputTokens = $response->usage->outputTokens ?? null;
+                    $actualModel = $fallback->model;
+                    $usedFallback = true;
+
+                    $this->logTokenAnomalies($company, $customerPhone, $inputTokens, $outputTokens);
+                    $this->applyToolSignals($lead, $response);
+                } catch (\Throwable $fallbackError) {
+                    Log::error('AgentRunner fallback also failed', [
+                        'company_id' => $company->id,
+                        'customer_phone' => $customerPhone,
+                        'error' => $fallbackError->getMessage(),
+                    ]);
+
+                    $locale = $lead->locale ?? $company->default_locale ?? 'ar';
+                    $assistantText = __('bot.fallback_error', [], $locale);
+                }
+            } else {
+                $locale = $lead->locale ?? $company->default_locale ?? 'ar';
+                $assistantText = __('bot.fallback_error', [], $locale);
+            }
+        }
+
+        if (isset($assistantText) && $inputTokens !== null && $outputTokens !== null) {
+            $inputCostPerMtok = $this->modelRegistry->costPerMtok($actualModel, 'input');
+            $outputCostPerMtok = $this->modelRegistry->costPerMtok($actualModel, 'output');
+            $costUsd = (($inputTokens / 1_000_000) * $inputCostPerMtok)
+                + (($outputTokens / 1_000_000) * $outputCostPerMtok);
         }
 
         if ($customerPhone !== '+200000000000') {
@@ -120,6 +179,8 @@ class AgentRunner
             'body' => $assistantText,
             'input_tokens' => $inputTokens,
             'output_tokens' => $outputTokens,
+            'model_used' => $actualModel,
+            'cost_usd' => $costUsd,
         ]);
 
         $session->pushTurn(['role' => 'assistant', 'content' => $assistantText]);
@@ -221,6 +282,8 @@ class AgentRunner
             return '';
         }
 
+        $modelChoice = $this->modelResolver->for($company);
+
         $systemPrompt = app(SystemPromptBuilder::class)->build($company, $lead);
 
         $session = app(ConversationSession::class);
@@ -246,10 +309,12 @@ class AgentRunner
 
         $inputTokens = null;
         $outputTokens = null;
+        $actualModel = $modelChoice->model;
+        $costUsd = null;
 
         try {
             $response = Prism::text()
-                ->using(config('prism.default_provider'), config('prism.default_model'))
+                ->using($modelChoice->provider, $modelChoice->model)
                 ->withSystemPrompt($systemPrompt)
                 ->withMessages($messages)
                 ->withMaxSteps(3)
@@ -264,11 +329,20 @@ class AgentRunner
             Log::error('AgentRunner Prism follow-up error', [
                 'company_id' => $company->id,
                 'customer_phone' => $customerPhone,
+                'model' => $modelChoice->model,
+                'provider' => $modelChoice->provider,
                 'error' => $e->getMessage(),
             ]);
 
             $locale = $lead->locale ?? $company->default_locale ?? 'ar';
             $assistantText = __('bot.default_followup_message', [], $locale);
+        }
+
+        if (isset($assistantText) && $inputTokens !== null && $outputTokens !== null) {
+            $inputCostPerMtok = $this->modelRegistry->costPerMtok($actualModel, 'input');
+            $outputCostPerMtok = $this->modelRegistry->costPerMtok($actualModel, 'output');
+            $costUsd = (($inputTokens / 1_000_000) * $inputCostPerMtok)
+                + (($outputTokens / 1_000_000) * $outputCostPerMtok);
         }
 
         if ($customerPhone !== '+200000000000') {
@@ -287,6 +361,8 @@ class AgentRunner
             'body' => $assistantText,
             'input_tokens' => $inputTokens,
             'output_tokens' => $outputTokens,
+            'model_used' => $actualModel,
+            'cost_usd' => $costUsd,
         ]);
 
         $session->pushTurn(['role' => 'assistant', 'content' => $assistantText]);
